@@ -93,7 +93,6 @@ void Graph_Iterator<E>::advance() {
 
 template<class E>
 void Graph_Iterator<E>::enter_node(int node) {
-  cout << "enter node " << node << '\n';
   if (node < graph->node_count()) {
     const vector<E> edges = (*graph)[node];
     current = edges.begin();

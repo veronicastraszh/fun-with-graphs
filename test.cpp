@@ -23,4 +23,13 @@ int main() {
   cout << *q << '\n';
   ++q;
   cout << (q == e) << ' ' << (q != e) << '\n';
+
+  cout << "Weighted\n";
+  Graph<Weighted_Edge> w_graph {};
+  w_graph += {0,3,44};
+  w_graph += {0,2,1};
+  w_graph += {4,0,4};
+  for (Weighted_Edge e : w_graph) {
+    cout << e << '\n';
+  }
 }

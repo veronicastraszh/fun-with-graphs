@@ -16,4 +16,15 @@ ostream& operator<<(ostream& os, Edge e) {
   return os << '{' << e.source << ',' << e.target << '}';
 }
 
+struct Weighted_Edge {
+  int source;
+  int target;
+  long weight;
+};
+
+ostream& operator<<(ostream& os, Weighted_Edge e) {
+  return os << '{' << e.source << ',' << e.target << "-(" << e.weight << ")}";
+}
+
+
 #endif

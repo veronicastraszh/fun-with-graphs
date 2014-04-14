@@ -1,6 +1,10 @@
 #include<vector>
 #include<algorithm>
 
+
+#include <iostream>
+
+
 using namespace std;
 
 // The main data structure for a graph
@@ -49,10 +53,9 @@ namespace graph {
   
   // A graph iterator
   
-  template<class E>
-    class Graph_Iterator {
+  template<class E> class Graph_Iterator {
   public:
-  Graph_Iterator(const Graph<E>* g, int n) : graph{g}, at_end{false} { enter_node(n); }
+    Graph_Iterator(const Graph<E>* g, int n) : graph{g}, at_end{false} { enter_node(n); }
     
     const E& operator*() { return *current; }
     Graph_Iterator operator++(int) { auto old = *this; advance(); return old; }
@@ -71,8 +74,7 @@ namespace graph {
     void enter_node(int node);
   };
   
-  template<class E>
-    bool Graph_Iterator<E>::operator==(const Graph_Iterator<E>& o) {
+  template<class E> bool Graph_Iterator<E>::operator==(const Graph_Iterator<E>& o) {
     return graph == o.graph
     && cur_node == o.cur_node
     && at_end == o.at_end
@@ -84,16 +86,16 @@ namespace graph {
     return !(*this).operator==(o);
   }
   
-  template<class E>
-    void Graph_Iterator<E>::advance() {
+  template<class E> void Graph_Iterator<E>::advance() {
+    cout << "enter advance, cur_node=" << cur_node << ' ' << reinterpret_cast<long long>(&*current) << '\n';
     current++;
     while (current == end && !at_end) {
       enter_node(cur_node+1);
     }
   }
   
-  template<class E>
-    void Graph_Iterator<E>::enter_node(int node) {
+  template<class E> void Graph_Iterator<E>::enter_node(int node) {
+    cout << "enter enter_node, node=" << node << '\n';
     if (node < graph->node_count()) {
       const vector<E> edges = (*graph)[node];
       current = edges.begin();

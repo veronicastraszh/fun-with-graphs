@@ -9,7 +9,7 @@ Graph<Weighted_Edge> duale(const Graph<Weighted_Edge>& g) {
   Graph<Weighted_Edge> result{};
   for (Weighted_Edge e : g) {
     cout << e << '\n';
-    //result += e; //reverse_edge(e);
+    //result += Weighted_Edge{0,0,1}; //reverse_edge(e);
   }
   return result;
 }

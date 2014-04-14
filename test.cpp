@@ -3,6 +3,7 @@
 #include "edge.h"
 
 using namespace std;
+using namespace graph;
 
 
 int main() {

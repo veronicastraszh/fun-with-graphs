@@ -18,8 +18,7 @@ namespace graph {
   
   // A graph
   
-  template<class E>
-    class Graph {
+  template<class E> class Graph {
   public:
     using edge_type = E;
     
@@ -55,57 +54,27 @@ namespace graph {
   
   template<class E> class Graph_Iterator {
   public:
-    Graph_Iterator(const Graph<E>* g, int n) : graph{g}, at_end{false} { enter_node(n); }
-    
-    const E& operator*() { return *current; }
+    Graph_Iterator(const Graph<E>* g, int n) : graph{g}, node{n}, offset{0} {};
+  
+    const E& operator*() { return (*graph)[node][offset]; }
     Graph_Iterator operator++(int) { auto old = *this; advance(); return old; }
     Graph_Iterator& operator++() { advance(); return *this; }
-    void advance();
     
-    bool operator==(const Graph_Iterator<E>& o);
-    bool operator!=(const Graph_Iterator<E>& o);
+    bool operator==(const Graph_Iterator<E>& o) { return graph == o.graph && node == o.node && offset == o.offset; }
+    bool operator!=(const Graph_Iterator<E>& o) { return !(*this).operator==(o); }
   private:
     const Graph<E>* graph;
-    int cur_node;
-    bool at_end;
-    typename vector<E>::const_iterator current;
-    typename vector<E>::const_iterator end;
-    
-    void enter_node(int node);
+    int node;
+    int offset;
+
+    void advance() {
+      offset++;
+      if(offset == (*graph)[node].size()) {
+	offset = 0;
+	node++;
+      }
+    }
   };
-  
-  template<class E> bool Graph_Iterator<E>::operator==(const Graph_Iterator<E>& o) {
-    return graph == o.graph
-    && cur_node == o.cur_node
-    && at_end == o.at_end
-    && current == o.current;
-  }
-  
-  template<class E>
-    bool Graph_Iterator<E>::operator!=(const Graph_Iterator<E>& o) {
-    return !(*this).operator==(o);
-  }
-  
-  template<class E> void Graph_Iterator<E>::advance() {
-    cout << "enter advance, cur_node=" << cur_node << ' ' << reinterpret_cast<long long>(&*current) << '\n';
-    current++;
-    while (current == end && !at_end) {
-      enter_node(cur_node+1);
-    }
-  }
-  
-  template<class E> void Graph_Iterator<E>::enter_node(int node) {
-    cout << "enter enter_node, node=" << node << '\n';
-    if (node < graph->node_count()) {
-      const vector<E> edges = (*graph)[node];
-      current = edges.begin();
-      end = edges.end();
-    } else {
-      current = end = typename vector<E>::const_iterator{};
-      at_end = true;
-    }
-    cur_node = node;
-  }
   
 }
       

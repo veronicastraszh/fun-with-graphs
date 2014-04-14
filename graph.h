@@ -19,14 +19,14 @@ namespace graph {
   public:
     using edge_type = E;
     
-    int node_count() const { return edges.size(); }
+    int node_count() const { return static_cast<int>(edges.size()); }
     int edge_count() const { return edges_n; }
     
     const vector<edge_type>& operator[](int node) { return edges[node]; }
     const vector<edge_type>& operator[](int node) const { return edges[node]; }
     
     Graph_Iterator<E> begin() const { return Graph_Iterator<E>{this, 0}; }
-    Graph_Iterator<E> end() const { return Graph_Iterator<E>{this, edges.size()}; }
+    Graph_Iterator<E> end() const { return Graph_Iterator<E>{this, static_cast<int>(edges.size())}; }
     
     Graph& operator+=(edge_type edge);
     

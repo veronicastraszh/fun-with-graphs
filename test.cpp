@@ -1,36 +1,34 @@
 #include<iostream>
-#include "graph.h"
-#include "edge.h"
+#include "graph_algo.h"
+#include "random_graph.h"
 
 using namespace std;
 using namespace graph;
 
+Graph<Weighted_Edge> duale(const Graph<Weighted_Edge>& g) {
+  Graph<Weighted_Edge> result{};
+  for (Weighted_Edge e : g) {
+    cout << e << '\n';
+    //result += e; //reverse_edge(e);
+  }
+  return result;
+}
 
 int main() {
-  Graph<Edge> graph {};
-  graph += {0,2};
-  graph += {1,3};
-  cout << graph.node_count() << '\n';
-  cout << graph.edge_count() << '\n';
-
-  cout << graph[0].size() << ' ' << graph[0][0] << '\n';
-  cout << graph[1].size() << ' ' << graph[1][0] << '\n';
-  cout << graph[2].size() << '\n';
-
-  Graph_Iterator<Edge> q = graph.begin(); // Graph_Iterator<Edge>(&graph, 0);
-  Graph_Iterator<Edge> e = graph.end(); // Graph_Iterator<Edge>(&graph, graph.node_count());
-  cout << *q << '\n';
-  q++;
-  cout << *q << '\n';
-  ++q;
-  cout << (q == e) << ' ' << (q != e) << '\n';
+  Graph<Edge> graph = random_graph(5,15);
+  for (Edge e: graph) {
+    cout << e << '\n';
+  }
 
   cout << "Weighted\n";
-  Graph<Weighted_Edge> w_graph {};
-  w_graph += {0,3,44};
-  w_graph += {0,2,1};
-  w_graph += {4,0,4};
+  Graph<Weighted_Edge> w_graph = random_weighted_graph(5,15,8);
   for (Weighted_Edge e : w_graph) {
     cout << e << '\n';
   }
+  // cout << "Reversed\n";
+  // for (Weighted_Edge e : dual(w_graph)) {
+  //   cout << e << '\n';
+  // }
+  cout << "Fred\n";
+  duale(w_graph);
 }

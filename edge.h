@@ -14,20 +14,20 @@ namespace graph {
     int target;
   };
   
-  ostream& operator<<(ostream& os, Edge e) {
-    return os << '{' << e.source << ',' << e.target << '}';
-  }
-  
+  ostream& operator<<(ostream& os, Edge e);
+
+  Edge reverse_edge(Edge e);
+
   struct Weighted_Edge {
     int source;
     int target;
     long weight;
   };
   
-  ostream& operator<<(ostream& os, Weighted_Edge e) {
-    return os << '{' << e.source << ',' << e.target << "}(" << e.weight << ")";
-  }
-  
+  ostream& operator<<(ostream& os, Weighted_Edge e);
+
+  Weighted_Edge reverse_edge(Weighted_Edge e);
+
 }
 
 #endif

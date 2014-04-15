@@ -1,6 +1,5 @@
 #include<set>
 #include<utility>
-//#include<functional>
 #include "graph.h"
 #include "edge.h"
 

@@ -12,7 +12,7 @@ int main() {
   }
 
   cout << "Weighted\n";
-  Graph<Weighted_Edge> w_graph = random_weighted_graph(5,15,8);
+  Graph<Weighted_Edge> w_graph = random_weighted_graph(10,12,32);
   for (Weighted_Edge e : w_graph) {
     cout << e << '\n';
   }

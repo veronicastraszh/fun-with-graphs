@@ -54,11 +54,11 @@ namespace graph {
   
   template<class E> class Graph_Iterator {
   public:
-    Graph_Iterator(const Graph<E>* g, int n) : graph{g}, node{n}, offset{0} {};
+    Graph_Iterator(const Graph<E>* g, int n) : graph{g}, node{n}, offset{0} { correct_node(); };
   
     const E& operator*() { return (*graph)[node][offset]; }
-    Graph_Iterator operator++(int) { auto old = *this; advance(); return old; }
-    Graph_Iterator& operator++() { advance(); return *this; }
+    Graph_Iterator operator++(int) { auto old = *this; ++offset; correct_node(); return old; }
+    Graph_Iterator& operator++() { ++offset; correct_node(); return *this; }
     
     bool operator==(const Graph_Iterator<E>& o) { return graph == o.graph && node == o.node && offset == o.offset; }
     bool operator!=(const Graph_Iterator<E>& o) { return !(*this).operator==(o); }
@@ -67,9 +67,8 @@ namespace graph {
     int node;
     int offset;
 
-    void advance() {
-      offset++;
-      if(offset == (*graph)[node].size()) {
+    void correct_node() {
+      while(node < graph->node_count() && offset == (*graph)[node].size()) {
 	offset = 0;
 	node++;
       }

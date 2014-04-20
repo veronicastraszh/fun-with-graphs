@@ -11,13 +11,7 @@ namespace graph {
   
   struct Edge;
 
-  class Hash_Edge {
-    const int shift = 32; // TODO make this a param
-    size_t operator()(const Edge& e) { return e.source << shift + e.target; }
-  }
-
   struct Edge {
-    using hash_type = Hash_Edge;
     int source;
     int target;
   };
@@ -29,13 +23,7 @@ namespace graph {
 
   struct Weighted_Edge;
 
-  class Hash_Weighted_Edge {
-    const int shift = 32; // TODO make this a param
-    size_t operator()(const Weighted_Edge& e) { return (e.source << shift + e.target) << shift + e.weight; }
-  }
-
   struct Weighted_Edge {
-    using hash_type = Hash_Weighted_Edge;
     int source;
     int target;
     long weight;
@@ -46,7 +34,5 @@ namespace graph {
   Weighted_Edge reverse_edge(Weighted_Edge e);
 
 }
-
-class Hash_Weighted_Edge
 
 #endif

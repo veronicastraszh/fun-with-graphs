@@ -1,6 +1,8 @@
 #include <utility>
 #include <vector>
 #include <stack>
+#include <algorithm>
+#include <functional>
 //#include <unordered_set>
 #include "graph.h"
 #include "edge.h"
@@ -12,6 +14,10 @@ using namespace std;
 
 namespace graph {
 
+  /**
+     COMPUTE DUAL TO A GRAPH
+   **/
+
   template<class E> Graph<E>
   dual(const Graph<E>& g) {
     Graph<E> result{};
@@ -21,59 +27,122 @@ namespace graph {
     return result;
   }
 
-  class enum Visit_Type { pre_visit, post_visit };
 
-  template<class T>
+  /**
+     DEPTH FIRST WALK
+   **/
+
+  enum class Visit_Type { pre, post };
+
   struct Visit {
-    T data;
+    int node;
     Visit_Type type;
   };
 
   template<class T>
   class Do_Nothing {
-    void operator()(T nothing) { }
+    void operator()(T& nothing) { }
   };
 
-  template<class E, class Pre, class Post=Do_Nothing, class Edge=Do_Nothing>
-  void depth_first(Graph<E> g, int start_node, Pre pre, Post post=Do_Nothing{}, Edge edge=Do_Nothing{}) {
-    stack<Visit<int>> visits;
-    stack.push({start_node, pre_visit});
-    while(!stack.empty()) {
-      Visit visit = stack.top(); stack.pop();
+  class Do_Nothing0 {
+    void operator()() { }
+  };
+
+  template<class E,
+	   class Pre,
+	   class Post,
+	   class Edge>
+  void dfw(const Graph<E>& g,
+	   int start_node,
+	   vector<bool>& visited, // modified in place
+	   Pre pre=Do_Nothing<int>{},
+	   Post post=Do_Nothing<int>{},
+	   Edge edge=Do_Nothing<E>{}) {
+    stack<Visit> visits;
+    visits.push({start_node, Visit_Type::pre});
+    while(!visits.empty()) {
+      Visit visit = visits.top(); visits.pop();
       switch(visit.type) {
-      case pre_visit:
-	pre(visit.data);
-	stack.push({visit.data, post_visit});
-	for (auto e : g[visit.data]) {
-	  edge(e);
-	  stack.push({e.target, pre_visit});
+      case Visit_Type::pre:
+	pre(visit.node);
+	visited[visit.node] = true;
+	visits.push({visit.node, Visit_Type::post});
+	for (auto e : g[visit.node]) {
+	  if (!visited[e.target]) {
+	    edge(e);
+	    visits.push({e.target, Visit_Type::pre});
+	  }
 	}
 	break;
-      case post_visit:
+      case Visit_Type::post:
 	post(visit.data);
 	break;
       }
     }
   }
 
-  template<class E, class Pre, class Post=Do_Nothing, class Edge=Do_Nothing>
-  void depth_first_all(Graph<E> g, Pre pre, Post post=Do_Nothing{}, Edge edge=Do_Nothing{}) {
-    vector<bool> visited{g.node_count(), false};
-    for(;;) {
-      int next_node = -1;
-      for (int i = 0; i < visited.size(); i++) {
-	if (!visited[i]) {
-	  next_node = i;
-	  break;
-	}
+  class Default_Selector {
+    int operator()(vector<bool>& visited) {
+      for(int i = 0; i < visisted.size(); i++) {
+	if (!visited[i]) return i;
       }
+      return -1;
+    };
+  };
+
+  template<class E,
+	   class Pre,
+	   class Post,
+	   class Edge,
+	   class Sel,
+	   class Comp>
+  void dfw_all(const Graph<E>& g,
+	       vector<bool>& visited, // modified in place
+	       Pre pre=Do_Nothing<int>{},
+	       Post post=Do_Nothing<int>{},
+	       Edge edge=Do_Nothing<int>{},
+	       Sel sel=Default_Selector{},
+	       Comp comp=Do_Nothing0{}) {
+    for(;;) {
+      int next_node = sel(visited);
       if (next_node == -1) break;
-      auto new_pre = [&pre](int n){ visited[n] = true; pre(n); };
-      depth_first(g, next_node, new_pre, post, edge);
+      dfw(g, next_node, visited, next_node, new_pre, post, edge);
+      comp();
     }
   }
 
 
+
+  /**
+     STRONGLY CONNECTED COMPONENTS, using multiple DFWs
+   **/
+
+  template<class E>
+  vector<vector<int>> scc(Graph<E>& g) {
+    vector<bool> visisted{g.node_count(), false};
+    vector<pair<int,int>> finish_times;
+    int counter = 0;
+    auto post1 = [&](int node) { finish_times.push_back({finish_time, node}); finish_time++; };
+    dfw_all(g, visited, Do_Nothing{}, post);
+    Graph<E> d = dual(g);
+    sort(finish_times, greater<int>{});
+    vector<vector<int>> result;
+    vector<int> current;
+    auto pre2 = [&](int node) { current.push_back(node); }
+    auto comp2 = [&]() { result.push_back(current); current = vector<int>{}; }
+    auto sel2 = [&](vector<bool> nodes) {
+      for(auto pair : finish_times) { if (!visited[pair.second]) return pair.second; }
+      return -1;
+    };
+    dfw_all(g, visited, pre2, Do_Nothing{}, Do_Nothing{}, sel2, comp2);
+    return result;
+  }
+
+
+
+  /**
+     DIJKSTRA'S ALGORITHM
+  **/
 
   template<class E, template<class,class> class H, class W=long>
   pair<vector<W>,vector<int>> dijkstra(Graph<E> g, int source_node, int max_edge_cost) {

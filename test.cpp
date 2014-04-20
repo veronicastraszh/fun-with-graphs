@@ -14,7 +14,7 @@ void print_graph(Graph<E> g) {
   }
 }
 
-int main() {
+void test_dijkstra() {
   Graph<Weighted_Edge> g = random_weighted_graph(100,500,25);
   print_graph(g);
   cout << '\n';
@@ -22,5 +22,17 @@ int main() {
   for (int i = 0; i < results.first.size(); i++) {
     cout << "node " << i << " cost " << results.first[i] << " parent " << results.second[i] << '\n';
   }
+}
+
+void test_dfw() {
+  Graph<Edge> g = random_graph(50, 150);
+  print_graph(g);
+  auto pre = [](int n) { count << "visit " << n << '\n'; };
+  vector<bool> visited{g.node_count(), false};
+  dfw_all(g, visisted, pre);
+}
+
+int main() {
+  test_dfw();
 }
 

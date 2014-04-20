@@ -1,24 +1,26 @@
 #include<iostream>
 #include "graph_algo.h"
 #include "random_graph.h"
+#include "heaps.h"
 
 using namespace std;
 using namespace graph;
+using namespace graph::heaps;
 
-int main() {
-  Graph<Edge> graph = random_graph(5,15);
-  for (Edge e: graph) {
-    cout << e << '\n';
-  }
-
-  cout << "\nWeighted\n";
-  Graph<Weighted_Edge> w_graph = random_weighted_graph(20,50,32);
-  for (Weighted_Edge e : w_graph) {
-    cout << e << '\n';
-  }
-
-  cout << "\nReversed\n";
-  for (Weighted_Edge e : dual(w_graph)) {
-    cout << e << '\n';
+template<class E>
+void print_graph(Graph<E> g) {
+  for (auto edge : g) {
+    cout << edge << '\n';
   }
 }
+
+int main() {
+  Graph<Weighted_Edge> g = random_weighted_graph(20,50,10);
+  print_graph(g);
+  cout << '\n';
+  auto results = dijkstra<Weighted_Edge, dial_heap>(g, 0);
+  for (int i = 0; i < results.first.size(); i++) {
+    cout << "node " << i << " cost " << results.first[i] << " parent " << results.second[i] << '\n';
+  }
+}
+

@@ -45,11 +45,6 @@ namespace graph {
     void operator()(T& nothing) { }
   };
 
-  class Do_Nothing0 {
-  public:
-    void operator()() { }
-  };
-
   template<class E,
 	   class Pre=Do_Nothing<int>,
 	   class Post=Do_Nothing<int>,
@@ -61,20 +56,19 @@ namespace graph {
 	   Post post=Do_Nothing<int>{},
 	   Edge edge=Do_Nothing<E>{}) {
     stack<Visit> visits;
-    vector<bool> seen(g.node_count(), false);
     visits.push({start_node, Visit_Type::pre});
     while(!visits.empty()) {
       Visit visit = visits.top(); visits.pop();
       switch(visit.type) {
       case Visit_Type::pre:
+	if (visited[visit.node]) break; // we can get into the stack twice
 	pre(visit.node);
 	visited[visit.node] = true;
 	visits.push({visit.node, Visit_Type::post});
 	for (auto e : g[visit.node]) {
-	  if (!visited[e.target] && !seen[e.target]) {
+	  if (!visited[e.target]) {
 	    edge(e);
 	    visits.push({e.target, Visit_Type::pre});
-	    seen[e.target] = true;
 	  }
 	}
 	break;
@@ -85,34 +79,19 @@ namespace graph {
     }
   }
 
-  class Default_Selector {
-  public:
-    int operator()(vector<bool>& visited) {
-      for(int i = 0; i < visited.size(); i++) {
-	if (!visited[i]) return i;
-      }
-      return -1;
-    };
-  };
-
   template<class E,
 	   class Pre=Do_Nothing<int>,
 	   class Post=Do_Nothing<int>,
-	   class Edge=Do_Nothing<E>,
-	   class Sel=Default_Selector,
-	   class Comp=Do_Nothing0>
+	   class Edge=Do_Nothing<E>>
   void dfw_all(const Graph<E>& g,
 	       Pre pre=Do_Nothing<int>{},
 	       Post post=Do_Nothing<int>{},
-	       Edge edge=Do_Nothing<E>{},
-	       Sel sel=Default_Selector{},
-	       Comp comp=Do_Nothing0{}) {
+	       Edge edge=Do_Nothing<E>{}) {
     vector<bool> visited(g.node_count(), false);
-    for(;;) {
-      int next_node = sel(visited);
-      if (next_node == -1) break;
-      dfw(g, next_node, visited, pre, post, edge);
-      comp();
+    for (int i = 0; i < g.node_count(); i++) {
+      if (!visited[i]) {
+	dfw(g, i, visited, pre, post, edge);
+      }
     }
   }
 
@@ -124,26 +103,25 @@ namespace graph {
 
   template<class E>
   vector<vector<int>> scc(Graph<E>& g) {
+
+    // find completion times is primary graph
     vector<int> finish_times;
-    auto pre1 = [](int node) { cout << node << ' '; };
     auto post1 = [&](int node) { finish_times.push_back(node); };
-    dfw_all(g, /*Do_Nothing<int>{}*/ pre1, post1);
-    cout << '\n';
-    for (int n : finish_times) { cout << n << ' '; } ; cout << '\n';
+    dfw_all(g, Do_Nothing<int>{}, post1);
+
+    // collect components in dual graph
     Graph<E> d = dual(g);
     vector<vector<int>> result;
     vector<int> current;
-    auto pre2 = [&](int node) { cout << node << ' '; current.push_back(node); };
-    auto comp2 = [&]() { cout << "c "; result.push_back(current); current = vector<int>{}; };
-    auto where = finish_times.rbegin();
-    auto sel2 = [&](vector<bool> visited) {
-      while (where != finish_times.rend()) {
-	if (!visited[*(where)]) return *where;
-	where++;
+    vector<bool> visited(d.node_count(), false);
+    auto pre2 = [&](int node) { current.push_back(node); };
+    for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
+      if (!visited[*n]) {
+	dfw(d, *n, visited, pre2);
+	result.push_back(current);
+	current = vector<int>{};
       }
-      return -1;
-    };
-    dfw_all(d, pre2, Do_Nothing<int>{}, Do_Nothing<E>{}, sel2, comp2);
+    }
     return result;
   }
 

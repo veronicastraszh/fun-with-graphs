@@ -34,7 +34,7 @@ void test_dfw() {
 }
 
 void test_scc() {
-  Graph<Edge> g = random_graph(15, 15);
+  Graph<Edge> g = random_graph(16, 22);
   print_graph(g);
   vector<vector<int>> result = scc(g);
   for (auto v : result) {
@@ -47,7 +47,7 @@ void test_scc() {
 }
 
 int main() {
-  //test_scc();
-  test_dfw();
+  test_scc();
+  //test_dfw();
 }
 

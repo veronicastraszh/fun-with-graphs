@@ -125,13 +125,16 @@ namespace graph {
   template<class E>
   vector<vector<int>> scc(Graph<E>& g) {
     vector<int> finish_times;
+    auto pre1 = [](int node) { cout << node << ' '; };
     auto post1 = [&](int node) { finish_times.push_back(node); };
-    dfw_all(g, Do_Nothing<int>{}, post1);
+    dfw_all(g, /*Do_Nothing<int>{}*/ pre1, post1);
+    cout << '\n';
+    for (int n : finish_times) { cout << n << ' '; } ; cout << '\n';
     Graph<E> d = dual(g);
     vector<vector<int>> result;
     vector<int> current;
-    auto pre2 = [&](int node) { current.push_back(node); };
-    auto comp2 = [&]() { result.push_back(current); current = vector<int>{}; };
+    auto pre2 = [&](int node) { cout << node << ' '; current.push_back(node); };
+    auto comp2 = [&]() { cout << "c "; result.push_back(current); current = vector<int>{}; };
     auto where = finish_times.rbegin();
     auto sel2 = [&](vector<bool> visited) {
       while (where != finish_times.rend()) {
@@ -140,7 +143,7 @@ namespace graph {
       }
       return -1;
     };
-    dfw_all(g, pre2, Do_Nothing<int>{}, Do_Nothing<E>{}, sel2, comp2);
+    dfw_all(d, pre2, Do_Nothing<int>{}, Do_Nothing<E>{}, sel2, comp2);
     return result;
   }
 

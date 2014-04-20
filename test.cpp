@@ -27,8 +27,10 @@ void test_dijkstra() {
 void test_dfw() {
   Graph<Edge> g = random_graph(15, 15);
   print_graph(g);
-  auto pre = [](int n) { cout << "visit " << n << '\n'; };
-  dfw_all(g, pre);
+  auto pre = [](int n) { cout << "pre " << n << '\n'; };
+  auto post = [](int n) { cout << "post " << n << '\n'; };
+  auto edge = [](Edge e) { cout << "edge " << e << '\n'; };
+  dfw_all(g, pre, post, edge);
 }
 
 void test_scc() {
@@ -45,6 +47,7 @@ void test_scc() {
 }
 
 int main() {
-  test_scc();
+  //test_scc();
+  test_dfw();
 }
 

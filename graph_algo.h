@@ -1,5 +1,7 @@
 #include <utility>
 #include <vector>
+#include <stack>
+//#include <unordered_set>
 #include "graph.h"
 #include "edge.h"
 
@@ -18,6 +20,59 @@ namespace graph {
     }
     return result;
   }
+
+  class enum Visit_Type { pre_visit, post_visit };
+
+  template<class T>
+  struct Visit {
+    T data;
+    Visit_Type type;
+  };
+
+  template<class T>
+  class Do_Nothing {
+    void operator()(T nothing) { }
+  };
+
+  template<class E, class Pre, class Post=Do_Nothing, class Edge=Do_Nothing>
+  void depth_first(Graph<E> g, int start_node, Pre pre, Post post=Do_Nothing{}, Edge edge=Do_Nothing{}) {
+    stack<Visit<int>> visits;
+    stack.push({start_node, pre_visit});
+    while(!stack.empty()) {
+      Visit visit = stack.top(); stack.pop();
+      switch(visit.type) {
+      case pre_visit:
+	pre(visit.data);
+	stack.push({visit.data, post_visit});
+	for (auto e : g[visit.data]) {
+	  edge(e);
+	  stack.push({e.target, pre_visit});
+	}
+	break;
+      case post_visit:
+	post(visit.data);
+	break;
+      }
+    }
+  }
+
+  template<class E, class Pre, class Post=Do_Nothing, class Edge=Do_Nothing>
+  void depth_first_all(Graph<E> g, Pre pre, Post post=Do_Nothing{}, Edge edge=Do_Nothing{}) {
+    vector<bool> visited{g.node_count(), false};
+    for(;;) {
+      int next_node = -1;
+      for (int i = 0; i < visited.size(); i++) {
+	if (!visited[i]) {
+	  next_node = i;
+	  break;
+	}
+      }
+      if (next_node == -1) break;
+      auto new_pre = [&pre](int n){ visited[n] = true; pre(n); };
+      depth_first(g, next_node, new_pre, post, edge);
+    }
+  }
+
 
 
   template<class E, template<class,class> class H, class W=long>

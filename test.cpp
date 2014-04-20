@@ -15,7 +15,7 @@ void print_graph(Graph<E> g) {
 }
 
 int main() {
-  Graph<Weighted_Edge> g = random_weighted_graph(20,50,10);
+  Graph<Weighted_Edge> g = random_weighted_graph(100,500,25);
   print_graph(g);
   cout << '\n';
   auto results = dijkstra<Weighted_Edge, dial_heap>(g, 0);

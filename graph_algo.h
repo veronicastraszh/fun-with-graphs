@@ -140,7 +140,9 @@ namespace graph {
     costs[source_node] = 0;
     locations[source_node] = heap.insert(0, source_node);
     while(!heap.empty()) {
-      for (auto node : heap.find_min()) {
+      auto mins = heap.find_mins();
+      heap.delete_mins();
+      for (auto node : mins) {
 	for (auto edge : g[node]) {
 	  long this_cost = costs[node] + edge.weight;
 	  if (costs[edge.target] == -1) {
@@ -156,7 +158,6 @@ namespace graph {
 	  }
 	}
       }
-      heap.delete_min();
     }
     return make_pair(costs, parents);
   }

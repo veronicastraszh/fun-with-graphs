@@ -23,8 +23,8 @@ namespace graph {
       location_type insert(key_type k, value_type t);
       location_type decrease_key(location_type loc, key_type old_k, key_type new_k);
       
-      const col_type find_min();
-      void delete_min();
+      const col_type find_mins();
+      void delete_mins();
       key_type size() const { return count; }
       bool empty() const { return count == 0; }
 
@@ -69,13 +69,13 @@ namespace graph {
     }
     
     template<class K, class T>
-    const typename dial_heap<K,T>::col_type dial_heap<K,T>::find_min() {
+    const typename dial_heap<K,T>::col_type dial_heap<K,T>::find_mins() {
       rebase();
       return elems[base];
     }
 
     template<class K, class T>
-    void dial_heap<K,T>::delete_min() {
+    void dial_heap<K,T>::delete_mins() {
       rebase();
       count -= elems[base].size();
       elems[base] = list<value_type>{};

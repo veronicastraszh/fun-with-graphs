@@ -47,7 +47,8 @@ void test_scc() {
 }
 
 int main() {
-  test_scc();
+  //test_scc();
   //test_dfw();
+  test_dijkstra();
 }
 

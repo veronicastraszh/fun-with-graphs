@@ -1,5 +1,8 @@
 // Some priority heaps for Dijkstra
 
+#ifndef HEAPS_MAIN_H
+#define HEAPS_MAIN_H
+
 #include <vector>
 #include <list>
 
@@ -15,21 +18,20 @@ namespace graph {
 
       using key_type = K;
       using value_type = T;
-      using col_type = list<value_type>;
       using location_type = typename list<value_type>::iterator;
 
-      dial_heap(int size) : elems{vector<col_type>(size)}, base{0}, count{0} {}
+      dial_heap(int size) : elems{vector<list<value_type>>(size)}, base{0}, count{0} {}
 
       location_type insert(key_type k, value_type t);
       location_type decrease_key(location_type loc, key_type old_k, key_type new_k);
       
-      const col_type find_mins();
-      void delete_mins();
+      value_type find_min();
+      void delete_min();
       key_type size() const { return count; }
       bool empty() const { return count == 0; }
 
     private:
-      vector<col_type> elems;
+      vector<list<value_type>> elems;
       key_type base;
       key_type count;
 
@@ -69,19 +71,20 @@ namespace graph {
     }
     
     template<class K, class T>
-    const typename dial_heap<K,T>::col_type dial_heap<K,T>::find_mins() {
+    typename dial_heap<K,T>::value_type dial_heap<K,T>::find_min() {
       rebase();
-      return elems[base];
+      return elems[base].front();
     }
 
     template<class K, class T>
-    void dial_heap<K,T>::delete_mins() {
+    void dial_heap<K,T>::delete_min() {
       rebase();
-      count -= elems[base].size();
-      elems[base] = list<value_type>{};
+      elems[base].pop_front();
+      count -= 1;
     }
 
   }
 
 }
 
+#endif

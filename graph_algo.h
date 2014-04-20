@@ -1,3 +1,6 @@
+#ifndef GRAPH_ALGO_MAIN_H
+#define GRAPH_ALGO_MAIN_H
+
 #include <utility>
 #include <vector>
 #include <stack>
@@ -8,9 +11,6 @@
 #include "edge.h"
 
 using namespace std;
-
-#ifndef GRAPH_ALGO_MAIN_H
-#define GRAPH_ALGO_MAIN_H
 
 namespace graph {
 
@@ -140,22 +140,20 @@ namespace graph {
     costs[source_node] = 0;
     locations[source_node] = heap.insert(0, source_node);
     while(!heap.empty()) {
-      auto mins = heap.find_mins();
-      heap.delete_mins();
-      for (auto node : mins) {
-	for (auto edge : g[node]) {
-	  long this_cost = costs[node] + edge.weight;
-	  if (costs[edge.target] == -1) {
-	    // new entry
-	    costs[edge.target] = this_cost;
-	    parents[edge.target] = node;
-	    locations[edge.target] = heap.insert(this_cost, edge.target);
-	  } else if (this_cost < costs[edge.target]) {
-	    // existing entry improved
-	    parents[edge.target] = node;
-	    locations[edge.target] = heap.decrease_key(locations[edge.target], costs[edge.target], this_cost);
-	    costs[edge.target] = this_cost;
-	  }
+      int node = heap.find_min();
+      heap.delete_min();
+      for (auto edge : g[node]) {
+	long this_cost = costs[node] + edge.weight;
+	if (costs[edge.target] == -1) {
+	  // new entry
+	  costs[edge.target] = this_cost;
+	  parents[edge.target] = node;
+	  locations[edge.target] = heap.insert(this_cost, edge.target);
+	} else if (this_cost < costs[edge.target]) {
+	  // existing entry improved
+	  parents[edge.target] = node;
+	  locations[edge.target] = heap.decrease_key(locations[edge.target], costs[edge.target], this_cost);
+	  costs[edge.target] = this_cost;
 	}
       }
     }

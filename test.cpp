@@ -27,9 +27,9 @@ void test_dijkstra() {
 void test_dfw() {
   Graph<Edge> g = random_graph(50, 150);
   print_graph(g);
-  auto pre = [](int n) { count << "visit " << n << '\n'; };
-  vector<bool> visited{g.node_count(), false};
-  dfw_all(g, visisted, pre);
+  auto pre = [](int n) { cout << "visit " << n << '\n'; };
+  vector<bool> visited(g.node_count(), false);
+  dfw_all(g, visited, pre);
 }
 
 int main() {

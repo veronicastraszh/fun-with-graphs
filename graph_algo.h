@@ -2,7 +2,7 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
-#include <functional>
+//#include <functional>
 //#include <unordered_set>
 #include "graph.h"
 #include "edge.h"
@@ -41,17 +41,19 @@ namespace graph {
 
   template<class T>
   class Do_Nothing {
+  public:
     void operator()(T& nothing) { }
   };
 
   class Do_Nothing0 {
+  public:
     void operator()() { }
   };
 
   template<class E,
-	   class Pre,
-	   class Post,
-	   class Edge>
+	   class Pre=Do_Nothing<int>,
+	   class Post=Do_Nothing<int>,
+	   class Edge=Do_Nothing<E>>
   void dfw(const Graph<E>& g,
 	   int start_node,
 	   vector<bool>& visited, // modified in place
@@ -59,6 +61,7 @@ namespace graph {
 	   Post post=Do_Nothing<int>{},
 	   Edge edge=Do_Nothing<E>{}) {
     stack<Visit> visits;
+    vector<bool> seen(g.node_count(), false);
     visits.push({start_node, Visit_Type::pre});
     while(!visits.empty()) {
       Visit visit = visits.top(); visits.pop();
@@ -68,9 +71,10 @@ namespace graph {
 	visited[visit.node] = true;
 	visits.push({visit.node, Visit_Type::post});
 	for (auto e : g[visit.node]) {
-	  if (!visited[e.target]) {
+	  if (!visited[e.target] && !seen[e.target]) {
 	    edge(e);
 	    visits.push({e.target, Visit_Type::pre});
+	    seen[e.target] = true;
 	  }
 	}
 	break;
@@ -82,6 +86,7 @@ namespace graph {
   }
 
   class Default_Selector {
+  public:
     int operator()(vector<bool>& visited) {
       for(int i = 0; i < visited.size(); i++) {
 	if (!visited[i]) return i;
@@ -91,22 +96,22 @@ namespace graph {
   };
 
   template<class E,
-	   class Pre,
-	   class Post,
-	   class Edge,
-	   class Sel,
-	   class Comp>
+	   class Pre=Do_Nothing<int>,
+	   class Post=Do_Nothing<int>,
+	   class Edge=Do_Nothing<E>,
+	   class Sel=Default_Selector,
+	   class Comp=Do_Nothing0>
   void dfw_all(const Graph<E>& g,
-	       vector<bool>& visited, // modified in place
 	       Pre pre=Do_Nothing<int>{},
 	       Post post=Do_Nothing<int>{},
-	       Edge edge=Do_Nothing<int>{},
+	       Edge edge=Do_Nothing<E>{},
 	       Sel sel=Default_Selector{},
 	       Comp comp=Do_Nothing0{}) {
+    vector<bool> visited(g.node_count(), false);
     for(;;) {
       int next_node = sel(visited);
       if (next_node == -1) break;
-      dfw(g, next_node, visited, next_node, pre, post, edge);
+      dfw(g, next_node, visited, pre, post, edge);
       comp();
     }
   }
@@ -119,22 +124,23 @@ namespace graph {
 
   template<class E>
   vector<vector<int>> scc(Graph<E>& g) {
-    vector<bool> visited{g.node_count(), false};
-    vector<pair<int,int>> finish_times;
-    int counter = 0;
-    auto post1 = [&](int node) { finish_times.push_back({counter, node}); counter++; };
-    dfw_all(g, visited, Do_Nothing<int>{}, post1);
+    vector<int> finish_times;
+    auto post1 = [&](int node) { finish_times.push_back(node); };
+    dfw_all(g, Do_Nothing<int>{}, post1);
     Graph<E> d = dual(g);
-    sort(finish_times.begin(), finish_times.end(), greater<int>{});
     vector<vector<int>> result;
     vector<int> current;
     auto pre2 = [&](int node) { current.push_back(node); };
     auto comp2 = [&]() { result.push_back(current); current = vector<int>{}; };
-    auto sel2 = [&](vector<bool> nodes) {
-      for(auto pair : finish_times) { if (!visited[pair.second]) return pair.second; }
+    auto where = finish_times.rbegin();
+    auto sel2 = [&](vector<bool> visited) {
+      while (where != finish_times.rend()) {
+	if (!visited[*(where)]) return *where;
+	where++;
+      }
       return -1;
     };
-    dfw_all(g, visited, pre2, Do_Nothing<int>{}, Do_Nothing<E>{}, sel2, comp2);
+    dfw_all(g, pre2, Do_Nothing<int>{}, Do_Nothing<E>{}, sel2, comp2);
     return result;
   }
 

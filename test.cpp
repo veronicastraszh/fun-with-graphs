@@ -8,7 +8,7 @@ using namespace graph;
 using namespace graph::heaps;
 
 template<class E>
-void print_graph(Graph<E> g) {
+void print_graph(const Graph<E>& g) {
   for (auto edge : g) {
     cout << edge << '\n';
   }
@@ -25,14 +25,26 @@ void test_dijkstra() {
 }
 
 void test_dfw() {
-  Graph<Edge> g = random_graph(50, 150);
+  Graph<Edge> g = random_graph(15, 15);
   print_graph(g);
   auto pre = [](int n) { cout << "visit " << n << '\n'; };
-  vector<bool> visited(g.node_count(), false);
-  dfw_all(g, visited, pre);
+  dfw_all(g, pre);
+}
+
+void test_scc() {
+  Graph<Edge> g = random_graph(15, 15);
+  print_graph(g);
+  vector<vector<int>> result = scc(g);
+  for (auto v : result) {
+    cout << "component";
+    for (auto n : v) {
+      cout << ' ' << n;
+    }
+    cout << '\n';
+  }
 }
 
 int main() {
-  test_dfw();
+  test_scc();
 }
 

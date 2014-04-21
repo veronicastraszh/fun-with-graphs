@@ -1,16 +1,20 @@
-#include<iostream>
-
-using namespace std;
+// Datatpes for edges
+// by Veronica Straszheim
 
 #ifndef EDGE_MAIN_H
 #define EDGE_MAIN_H 1
 
-namespace graph {
-  
-  // Different kinds of edges
-  
-  struct Edge;
+#include<iostream>
 
+using namespace std;
+
+namespace graph {
+
+
+  /**
+     A BASIC EDGE
+  **/
+  
   struct Edge {
     int source;
     int target;
@@ -20,8 +24,10 @@ namespace graph {
 
   Edge reverse_edge(Edge e);
 
-
-  struct Weighted_Edge;
+  
+  /**
+     A WEIGHTED EDGE
+  **/
 
   struct Weighted_Edge {
     int source;
@@ -36,3 +42,5 @@ namespace graph {
 }
 
 #endif
+
+// end of file

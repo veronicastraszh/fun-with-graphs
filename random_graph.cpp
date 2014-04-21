@@ -1,3 +1,6 @@
+// Simple random graphs
+// by Veronica Straszheim
+
 #include<cstdlib>
 #include "random_graph.h"
 
@@ -28,3 +31,5 @@ namespace graph {
   }
 
 }
+
+// end of file

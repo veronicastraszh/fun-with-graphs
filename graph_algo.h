@@ -1,3 +1,6 @@
+// Algorithms over graphs
+// by Veronica Straszheim
+
 #ifndef GRAPH_ALGO_MAIN_H
 #define GRAPH_ALGO_MAIN_H
 
@@ -5,8 +8,6 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
-//#include <functional>
-//#include <unordered_set>
 #include "graph.h"
 #include "edge.h"
 
@@ -45,6 +46,17 @@ namespace graph {
     void operator()(T& nothing) { }
   };
 
+  /**
+     dfw - depth first walk
+     
+     Walks from start_node, marking the visited nodes in the
+     vector<bool>. For each node, call pre and post respecively in
+     pre-order and post-order. For each edge, we call edge as we
+     encounter it.
+
+     Note this will only visit nodes reachable from start_node.
+   **/
+
   template<class E,
 	   class Pre=Do_Nothing<int>,
 	   class Post=Do_Nothing<int>,
@@ -66,8 +78,8 @@ namespace graph {
 	visited[visit.node] = true;
 	visits.push({visit.node, Visit_Type::post});
 	for (auto e : g[visit.node]) {
+	  edge(e);
 	  if (!visited[e.target]) {
-	    edge(e);
 	    visits.push({e.target, Visit_Type::pre});
 	  }
 	}
@@ -78,6 +90,14 @@ namespace graph {
       }
     }
   }
+
+  /**
+     dfw_all - depth first walk, all nodes
+
+     Calls dfw repeatedly so that all nodes are visited. After each
+     walk, finds the lowest remaining node and starts a walk from
+     there.
+   **/
 
   template<class E,
 	   class Pre=Do_Nothing<int>,
@@ -98,8 +118,15 @@ namespace graph {
 
 
   /**
-     STRONGLY CONNECTED COMPONENTS, using multiple DFWs
+     STRONGLY CONNECTED COMPONENTS
    **/
+
+  /**
+     scc - strongly connected components
+
+     Given a graph, returns a vector of vectors, each of which is a
+     single strongly-connected-component of g.
+  **/
 
   template<class E>
   vector<vector<int>> scc(Graph<E>& g) {
@@ -131,6 +158,26 @@ namespace graph {
      DIJKSTRA'S ALGORITHM
   **/
 
+  /**
+     dijkstra - Dikstra's shortest path algoritm
+
+     Walks a graph from the source_node and discovers the shortest
+     path to each other node.
+
+     Returns a pair of vectors. The first vector is the cost to reach
+     each node. (-1 is returned for unreachable nodes.) The second is
+     the parent of each node, which is the node FROM which we can
+     reach this node. In other words, the edge {parent(n), n} is the
+     final edge in the path from source_node to n. The edge
+     {parent(parent(n)), parent(n)} is likewise the second to last.
+
+     E is the edge type, which must include a field named weight.
+
+     H is a heap class, as provided in heaps.h.
+
+     W is the type of edge_cost, usually long.
+   **/
+
   template<class E, template<class,class> class H, class W=long>
   pair<vector<W>,vector<int>> dijkstra(Graph<E> g, int source_node, int max_edge_cost) {
     vector<long> costs(g.node_count(), -1);
@@ -160,6 +207,12 @@ namespace graph {
     return make_pair(costs, parents);
   }
   
+  /**
+     dijkstra - Dikstra's shortest path algoritm
+
+     As above, but computes the max_edge_cost.
+  **/
+
   template<class E, template<class,class> class H, class W=long>
   pair<vector<W>,vector<int>> dijkstra(Graph<E> g, int source_node) {
     int max_edge_cost = 0;

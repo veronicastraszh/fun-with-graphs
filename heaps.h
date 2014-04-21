@@ -1,4 +1,5 @@
 // Some priority heaps for Dijkstra
+// by Veronica Straszheim
 
 #ifndef HEAPS_MAIN_H
 #define HEAPS_MAIN_H
@@ -14,6 +15,51 @@ using namespace std;
 namespace graph {
 
   namespace heaps {
+
+    /**
+       These heaps are designed to work with the Dijkstra shortest
+       path algoritm, and thus can follow certain constraints, namely
+       these:
+
+       1. delete_min() must always be preceded by a find_min(), which
+          is to say, there should be no intervening modifications to
+          the queue.
+
+       2. Once an element is found by delete_min(), no element will be
+          added with a key of less than the minimum found. This means
+          as follows: if we call find_min(), and the heap returns an
+          element whose key was 15, no element will ever be added with
+          a key of less than 15.
+
+       This second constraint follows from the fact that shorter paths
+       are always discovered before longer paths.
+
+       Two heaps are provided:
+
+       * A dial_heap
+
+       * radix_heap
+
+       dial_heap takes size equal to the largest edge weight in the
+       graph (plus one). radix_heap takes size equal to ln(N * ME),
+       where N is the node_count of the graph and ME is the maximum
+       edge weight. Both heaps have a find_min and delete_min that
+       run O(s), where s is their size.
+
+       For dial_heal, insert and decrease_key are constant time. For
+       radix_heap, they are both O(s).
+
+       However, for both of the heaps, their average case time is
+       quite a bit better.
+
+       If the big-Oh size is acceptable, dial_heap should be prefered,
+       as it has excellent constant time performance.
+     **/
+
+
+    /**
+       DIAL HEAP
+    **/
 
     template<class K, class T>
     class dial_heap {
@@ -85,6 +131,10 @@ namespace graph {
       count -= 1;
     }
 
+
+    /**
+       RADIX HEAP
+    **/
 
     template<class K, class T>
     class radix_heap {
@@ -211,3 +261,5 @@ namespace graph {
 }
 
 #endif
+
+// end of file

@@ -1,18 +1,32 @@
+// A datatype for graphs
+// by Veronica Straszheim
+
+#ifndef GRAPH_MAIN_H
+#define GRAPH_MAIN_H 1
+
 #include<vector>
 #include<algorithm>
 
 using namespace std;
 
-// The main data structure for a graph
-
-#ifndef GRAPH_MAIN_H
-#define GRAPH_MAIN_H 1
 
 namespace graph {
 
   template<class E> class Graph_Iterator;
   
-  // A graph
+  /**
+     A Graph.
+
+     The template parameter E should be some edge type, from
+     edges.h. For a basic graph, any type with members named source
+     and target will do.
+
+     Edges are added to a graph using the += operator.
+
+     Edges are looked up using the [] operator, where the node id is provided.
+
+     A graph supports iteration, which provides all edges.
+   **/
   
   template<class E>
   class Graph {
@@ -78,3 +92,6 @@ namespace graph {
 }
       
 #endif
+
+// end of file
+

@@ -1,3 +1,6 @@
+// Routines to support edges
+// by Veronica Straszheim
+
 #include "edge.h"
 
 namespace graph {
@@ -19,3 +22,5 @@ namespace graph {
   }
   
 }
+
+// end of file

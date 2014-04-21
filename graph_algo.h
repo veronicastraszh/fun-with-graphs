@@ -135,7 +135,7 @@ namespace graph {
   pair<vector<W>,vector<int>> dijkstra(Graph<E> g, int source_node, int max_edge_cost) {
     vector<long> costs(g.node_count(), -1);
     vector<int> parents(g.node_count(), -1);
-    H<W,W> heap(max_edge_cost + 1);
+    H<W,W> heap(g.node_count(), max_edge_cost);
     vector<typename decltype(heap)::location_type> locations(g.node_count());
     costs[source_node] = 0;
     locations[source_node] = heap.insert(0, source_node);

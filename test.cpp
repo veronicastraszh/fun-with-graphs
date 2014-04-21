@@ -15,10 +15,10 @@ void print_graph(const Graph<E>& g) {
 }
 
 void test_dijkstra() {
-  Graph<Weighted_Edge> g = random_weighted_graph(20,100,25);
+  Graph<Weighted_Edge> g = random_weighted_graph(8, 25, 25);
   print_graph(g);
   cout << '\n';
-  auto results = dijkstra<Weighted_Edge, dial_heap>(g, 0);
+  auto results = dijkstra<Weighted_Edge, radix_heap>(g, 0);
   for (int i = 0; i < results.first.size(); i++) {
     cout << "node " << i << " cost " << results.first[i] << " parent " << results.second[i] << '\n';
   }

@@ -131,7 +131,7 @@ namespace graph {
   template<class E>
   vector<vector<int>> scc(Graph<E>& g) {
 
-    // find completion times is primary graph
+    // find completion times in primary graph
     vector<int> finish_times;
     auto post1 = [&](int node) { finish_times.push_back(node); };
     dfw_all(g, Do_Nothing<int>{}, post1);

@@ -202,7 +202,7 @@ namespace graph {
 	width *= 2;
 	bucket++;
       }
-    } // 0 1 3 7 15 31
+    }
 
     template<class K, class T>
     int radix_heap<K,T>::first_occupied() {

@@ -230,31 +230,36 @@ namespace graph {
       int old_bucket = find_bucket(old_k);
       int new_bucket = find_bucket(new_k);
       if (old_bucket != new_bucket) {
-	buckets[new_bucket].push_front(*loc);
-	buckets[old_bucket].erase(loc);
-	return buckets[new_bucket].begin();
-      } else {
-	return loc;
+	buckets[new_bucket].splice(buckets[new_bucket].begin(), buckets[old_bucket], loc);
       }
+      return loc;
     }
 
     template<class K, class T>
     typename radix_heap<K,T>::value_type radix_heap<K,T>::find_min() {
-      // reshuffle elements to get minimum up front
       int f = first_occupied();
-      key_type min = numeric_limits<key_type>::max();
-      list<elem> bucket;
-      swap(bucket, buckets[f]);
-      count -= bucket.size();
-      for (elem e : bucket) if (e.first < min) min = e.first;
-      new_ranges(min, ranges[f]);
-      for (elem e : bucket) insert(e.first, e.second);
-      return buckets[0].front().second;
+      if (f >= 2) {
+	// reshuffle elements to get minimum up front
+	key_type min = numeric_limits<key_type>::max();
+	list<elem> remove;
+	swap(remove, buckets[f]);
+	for (elem e : remove) if (e.first < min) min = e.first;
+	new_ranges(min, ranges[f]);
+	vector<location_type> locs;
+	for (location_type loc = remove.begin(); loc != remove.end(); loc++) locs.push_back(loc);
+	for (location_type loc : locs) {
+	  int bucket = find_bucket(loc->first);
+	  buckets[bucket].splice(buckets[bucket].begin(), remove, loc);
+	}
+	f = 0;
+      }
+      return buckets[f].front().second;
     }
 
     template<class K, class T>
     void radix_heap<K,T>::delete_min() {
-      buckets[0].pop_front();
+      int f = first_occupied();
+      buckets[f].pop_front();
       count -= 1;
     }
 

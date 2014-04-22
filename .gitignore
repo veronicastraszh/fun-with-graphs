@@ -1,3 +1,5 @@
 *~
 *.dSYM
 test
+*.a
+*.o

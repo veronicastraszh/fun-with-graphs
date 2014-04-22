@@ -69,7 +69,9 @@ namespace graph {
       using value_type = T;
       using location_type = typename list<value_type>::iterator;
 
-      dial_heap(int nodes, int max_weight) : elems{vector<list<value_type>>(max_weight + 1)}, base{0}, count{0} {}
+      dial_heap(int nodes, int max_weight) : elems{vector<list<value_type>>(max_weight + 1)}, base{0}, count{0} {
+#pragma unused(nodes)
+      }
 
       location_type insert(key_type k, value_type t);
       location_type decrease_key(location_type loc, key_type old_k, key_type new_k);
@@ -167,7 +169,7 @@ namespace graph {
     };
 
     template<class K, class T>
-    radix_heap<K,T>::radix_heap(int nodes, int max_weight) : count{0}, ranges{}, buckets{} {
+    radix_heap<K,T>::radix_heap(int nodes, int max_weight) : buckets{}, ranges{}, count{0} {
       int size = nodes * max_weight;
       int depth = 2;
       int t_size = size;
@@ -180,7 +182,7 @@ namespace graph {
 
     template<class K, class T>
     int radix_heap<K,T>::find_bucket(key_type e) {
-      for (int i = 0; i < ranges.size(); i++) {
+      for (unsigned int i = 0; i < ranges.size(); i++) {
 	if (ranges[i] >= e) return i;
       }
       throw length_error{"beyond end of radix heap"};
@@ -206,7 +208,7 @@ namespace graph {
 
     template<class K, class T>
     int radix_heap<K,T>::first_occupied() {
-      for (int i = 0; i < buckets.size(); i++) {
+      for (unsigned int i = 0; i < buckets.size(); i++) {
 	if (!buckets[i].empty()) return i;
       }
       throw out_of_range{"radix heap empty"};

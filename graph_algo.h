@@ -33,18 +33,40 @@ namespace graph {
      DEPTH FIRST WALK
    **/
 
-  enum class Visit_Type { pre, post };
-
-  struct Visit {
-    int node;
-    Visit_Type type;
-  };
-
   template<class T>
   class Do_Nothing {
   public:
-    void operator()(T& nothing) { }
+    void operator()(T& nothing) {
+#pragma unused(nothing)
+    }
   };
+
+  template<class T, class S>
+  class Do_Nothing2 {
+  public:
+    void operator()(T& nothing, S&nothing2) {
+#pragma unused(nothing)
+#pragma unused(nothing2)
+    }
+  };
+
+  namespace dfw_help {
+
+    enum class Visit_Type { pre, post };
+    
+    template<class E>
+    struct Visit {
+      using node_type = typename Graph<E>::node_type;
+      Visit(E e) : type{Visit_Type::pre} { edge = e; };
+      Visit(node_type n) : type{Visit_Type::post} { node = n; };
+      Visit_Type type;
+      union {
+	node_type node;
+	E edge;
+      };
+    };
+    
+  }
 
   /**
      dfw - depth first walk
@@ -58,31 +80,31 @@ namespace graph {
    **/
 
   template<class E,
-	   class Pre=Do_Nothing<int>,
-	   class Post=Do_Nothing<int>,
+	   class Pre=Do_Nothing<typename Graph<E>::node_type>,
+	   class Post=Do_Nothing<typename Graph<E>::node_type>,
 	   class Edge=Do_Nothing<E>>
   void dfw(const Graph<E>& g,
-	   int start_node,
+	   typename Graph<E>::node_type start_node,
 	   vector<bool>& visited, // modified in place
-	   Pre pre=Do_Nothing<int>{},
-	   Post post=Do_Nothing<int>{},
+	   Pre pre=Do_Nothing<typename Graph<E>::node_type>{},
+	   Post post=Do_Nothing<typename Graph<E>::node_type>{},
 	   Edge edge=Do_Nothing<E>{}) {
-    stack<Visit> visits;
-    visits.push({start_node, Visit_Type::pre});
+    using namespace dfw_help;
+    stack<Visit<E>> visits;
+    pre(start_node);
+    visited[start_node] = true;
+    visits.push(Visit<E>{start_node});
+    for (auto e : g[start_node]) visits.push(Visit<E>{e});
     while(!visits.empty()) {
-      Visit visit = visits.top(); visits.pop();
+      Visit<E> visit = visits.top(); visits.pop();
       switch(visit.type) {
       case Visit_Type::pre:
-	if (visited[visit.node]) break; // we can get into the stack twice
-	pre(visit.node);
-	visited[visit.node] = true;
-	visits.push({visit.node, Visit_Type::post});
-	for (auto e : g[visit.node]) {
-	  edge(e);
-	  if (!visited[e.target]) {
-	    visits.push({e.target, Visit_Type::pre});
-	  }
-	}
+	edge(visit.edge);
+	if (visited[visit.edge.target]) break;
+	pre(visit.edge.target);
+	visited[visit.edge.target] = true;
+	visits.push(Visit<E>{visit.edge.target});
+	for (auto e : g[visit.edge.target]) visits.push(Visit<E>{e});
 	break;
       case Visit_Type::post:
 	post(visit.node);
@@ -90,6 +112,10 @@ namespace graph {
       }
     }
   }
+
+  /**
+     Enter -> discovered -> pre -> each-edge(edge,!discovered->dfw) -> post
+   **/
 
   /**
      dfw_all - depth first walk, all nodes
@@ -100,15 +126,16 @@ namespace graph {
    **/
 
   template<class E,
-	   class Pre=Do_Nothing<int>,
-	   class Post=Do_Nothing<int>,
+	   class Pre=Do_Nothing<typename Graph<E>::node_type>,
+	   class Post=Do_Nothing<typename Graph<E>::node_type>,
 	   class Edge=Do_Nothing<E>>
   void dfw_all(const Graph<E>& g,
-	       Pre pre=Do_Nothing<int>{},
-	       Post post=Do_Nothing<int>{},
+	       Pre pre=Do_Nothing<typename Graph<E>::node_type>{},
+	       Post post=Do_Nothing<typename Graph<E>::node_type>{},
 	       Edge edge=Do_Nothing<E>{}) {
+    using node_type = typename Graph<E>::node_type;
     vector<bool> visited(g.node_count(), false);
-    for (int i = 0; i < g.node_count(); i++) {
+    for (node_type i = 0; i < g.node_count(); i++) {
       if (!visited[i]) {
 	dfw(g, i, visited, pre, post, edge);
       }
@@ -129,24 +156,25 @@ namespace graph {
   **/
 
   template<class E>
-  vector<vector<int>> scc(Graph<E>& g) {
+  vector<vector<typename Graph<E>::node_type>> scc(Graph<E>& g) {
+    using node_type = typename Graph<E>::node_type;
 
     // find completion times in primary graph
-    vector<int> finish_times;
+    vector<node_type> finish_times;
     auto post1 = [&](int node) { finish_times.push_back(node); };
-    dfw_all(g, Do_Nothing<int>{}, post1);
-
+    dfw_all(g, Do_Nothing<node_type>{}, post1);
+    
     // collect components in dual graph
     Graph<E> d = dual(g);
-    vector<vector<int>> result;
-    vector<int> current;
+    vector<vector<node_type>> result;
+    vector<node_type> current;
     vector<bool> visited(d.node_count(), false);
     auto pre2 = [&](int node) { current.push_back(node); };
     for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
       if (!visited[*n]) {
 	dfw(d, *n, visited, pre2);
 	result.push_back(current);
-	current = vector<int>{};
+	current = vector<node_type>{};
       }
     }
     return result;

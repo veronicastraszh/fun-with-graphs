@@ -19,13 +19,13 @@ void test_dijkstra() {
   print_graph(g);
   cout << '\n';
   auto results = dijkstra<Weighted_Edge, radix_heap>(g, 0);
-  for (int i = 0; i < results.first.size(); i++) {
+  for (unsigned int i = 0; i < results.first.size(); i++) {
     cout << "node " << i << " cost " << results.first[i] << " parent " << results.second[i] << '\n';
   }
 }
 
 void test_dfw() {
-  Graph<Edge> g = random_graph(15, 15);
+  Graph<Edge> g = random_graph(16, 22);
   print_graph(g);
   auto pre = [](int n) { cout << "pre " << n << '\n'; };
   auto post = [](int n) { cout << "post " << n << '\n'; };
@@ -34,9 +34,21 @@ void test_dfw() {
 }
 
 void test_scc() {
-  Graph<Edge> g = random_graph(16, 22);
+  Graph<Edge> g;
+  g += {0,1};
+  g += {1,2};
+  g += {1,3};
+  g += {1,4};
+  g += {2,0};
+  g += {3,0};
+  g += {3,5};
+  g += {3,7};
+  g += {4,5};
+  g += {5,6};
+  g += {6,4};
+  g += {7,5};
   print_graph(g);
-  vector<vector<int>> result = scc(g);
+  vector<vector<typename Graph<Edge>::node_type>> result = scc(g);
   for (auto v : result) {
     cout << "component";
     for (auto n : v) {
@@ -47,8 +59,8 @@ void test_scc() {
 }
 
 int main() {
-  //test_scc();
   //test_dfw();
-  test_dijkstra();
+  test_scc();
+  //test_dijkstra();
 }
 

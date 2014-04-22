@@ -16,8 +16,9 @@ namespace graph {
   **/
   
   struct Edge {
-    int source;
-    int target;
+    using node_type = unsigned int;
+    node_type source;
+    node_type target;
   };
   
   ostream& operator<<(ostream& os, Edge e);
@@ -30,9 +31,11 @@ namespace graph {
   **/
 
   struct Weighted_Edge {
-    int source;
-    int target;
-    long weight;
+    using node_type = unsigned int;
+    using weight_type = long;
+    node_type source;
+    node_type target;
+    weight_type weight;
   };
   
   ostream& operator<<(ostream& os, Weighted_Edge e);

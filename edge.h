@@ -32,7 +32,7 @@ namespace graph {
 
   struct Weighted_Edge {
     using node_type = unsigned int;
-    using weight_type = long;
+    using weight_type = unsigned long;
     node_type source;
     node_type target;
     weight_type weight;

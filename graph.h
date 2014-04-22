@@ -34,6 +34,11 @@ namespace graph {
     using edge_type = E;
     using size_type = typename vector<edge_type>::size_type;
     using node_type = typename E::node_type;
+
+    Graph() {};
+    Graph(initializer_list<edge_type> es) {
+      for (auto e : es) operator+=(e);
+    }
     
     node_type node_count() const { return static_cast<node_type>(edges.size()); }
     size_type edge_count() const { return edges_n; }

@@ -203,23 +203,28 @@ namespace graph {
 
      H is a heap class, as provided in heaps.h.
 
-     W is the type of edge_cost, usually long.
    **/
 
-  template<class E, template<class,class> class H, class W=long>
-  pair<vector<W>,vector<int>> dijkstra(Graph<E> g, int source_node, int max_edge_cost) {
-    vector<long> costs(g.node_count(), -1);
-    vector<int> parents(g.node_count(), -1);
-    H<W,W> heap(g.node_count(), max_edge_cost);
+  template<class E, template<class,class> class H>
+  pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type>>
+    dijkstra(Graph<E> g,
+	     typename Graph<E>::node_type source_node,
+	     typename E::weight_type max_edge_cost) {
+    
+    using node_type = typename Graph<E>::node_type;
+    using weight_type = typename E::weight_type;
+    vector<weight_type> costs(g.node_count(), numeric_limits<weight_type>::max());
+    vector<node_type> parents(g.node_count(), numeric_limits<node_type>::max());
+    H<weight_type, node_type> heap(g.node_count(), max_edge_cost);
     vector<typename decltype(heap)::location_type> locations(g.node_count());
     costs[source_node] = 0;
     locations[source_node] = heap.insert(0, source_node);
     while(!heap.empty()) {
-      int node = heap.find_min();
+      node_type node = heap.find_min();
       heap.delete_min();
       for (auto edge : g[node]) {
-	long this_cost = costs[node] + edge.weight;
-	if (costs[edge.target] == -1) {
+	weight_type this_cost = costs[node] + edge.weight;
+	if (costs[edge.target] == numeric_limits<weight_type>::max()) {
 	  // new entry
 	  costs[edge.target] = this_cost;
 	  parents[edge.target] = node;
@@ -241,13 +246,16 @@ namespace graph {
      As above, but computes the max_edge_cost.
   **/
 
-  template<class E, template<class,class> class H, class W=long>
-  pair<vector<W>,vector<int>> dijkstra(Graph<E> g, int source_node) {
-    int max_edge_cost = 0;
+  template<class E, template<class,class> class H>
+  pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type>>
+    dijkstra(Graph<E> g,
+	     typename Graph<E>::node_type source_node) {
+    using weight_type = typename E::weight_type;
+    weight_type max_edge_cost = 0;
     for (auto e : g) {
       if (e.weight > max_edge_cost) max_edge_cost = e.weight;
     }
-    return dijkstra<E,H,W>(g, source_node, max_edge_cost);
+    return dijkstra<E,H>(g, source_node, max_edge_cost);
   }
 
 }

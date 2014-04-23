@@ -6,6 +6,9 @@ all: tests
 tests: lib
 	(cd test; make)
 
+run: lib
+	(cd test; make run)
+
 lib:
 	(cd src; make)
 

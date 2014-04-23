@@ -2,3 +2,5 @@
 *.dSYM
 *.a
 *.o
+walks
+shortest_path

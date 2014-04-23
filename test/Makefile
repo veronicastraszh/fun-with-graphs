@@ -3,15 +3,21 @@ include ../make.inc
 VPATH=../include
 
 
-.DUMMY: all
+.DUMMY: all run_all
 
-all: test
-	./test
+all: shortest_path walks
 
-test: test.o | ../$(LIB)
+run: all
+	./shortest_path
+	./walks
+
+shortest_path: shortest_path.o
 	$(CPP) $(CPPOPTS) -o $@ $< -L .. -lfungraphs
 
-%.o: %.cpp edge.h graph.h graph_algo.h heaps.h random_graph.h
+walks: walks.o
+	$(CPP) $(CPPOPTS) -o $@ $< -L .. -lfungraphs
+
+%.o: %.cpp edge.h graph.h graph_algo.h heaps.h random_graph.h graph_utils.h
 	$(CPP) -c $(CPPOPTS) -I ../include -o $@ $<
 
 clean:

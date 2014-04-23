@@ -4,10 +4,10 @@
 all: tests
 
 tests: lib
-	(cd test; make)
-
-run: lib
 	(cd test; make run)
+
+build: lib
+	(cd test; make)
 
 lib:
 	(cd src; make)

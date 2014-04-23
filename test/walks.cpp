@@ -59,7 +59,7 @@ void test_scc() {
                  {7,5}};
   using component = vector<typename Graph<Edge>::node_type>;
   using result_type = vector<component>;
-  result_type result = scc(g);
+  result_type result = scc(g, dual(g));
   result_type expected{{ 0, 1, 2, 3 },
                        { 7 },
                        { 4, 5, 6 }};
@@ -72,9 +72,9 @@ void test_scc() {
       }
     };
     print_graph(g);
-    cout << "Expected:\n";
+    cout << "Found:\n";
     print(result);
-    cout << "\nFound:\n";
+    cout << "\nExpected:\n";
     print(expected);
     cout << '\n';
     exit(1);

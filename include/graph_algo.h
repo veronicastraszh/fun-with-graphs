@@ -113,37 +113,7 @@ namespace graph {
     }
   }
 
-  /**
-     Enter -> discovered -> pre -> each-edge(edge,!discovered->dfw) -> post
-   **/
-
-  /**
-     dfw_all - depth first walk, all nodes
-
-     Calls dfw repeatedly so that all nodes are visited. After each
-     walk, finds the lowest remaining node and starts a walk from
-     there.
-   **/
-
-  template<class E,
-	   class Pre=Do_Nothing<typename Graph<E>::node_type>,
-	   class Post=Do_Nothing<typename Graph<E>::node_type>,
-	   class Edge=Do_Nothing<E>>
-  void dfw_all(const Graph<E>& g,
-	       Pre pre=Do_Nothing<typename Graph<E>::node_type>{},
-	       Post post=Do_Nothing<typename Graph<E>::node_type>{},
-	       Edge edge=Do_Nothing<E>{}) {
-    using node_type = typename Graph<E>::node_type;
-    vector<bool> visited(g.node_count(), false);
-    for (node_type i = 0; i < g.node_count(); i++) {
-      if (!visited[i]) {
-	dfw(g, i, visited, pre, post, edge);
-      }
-    }
-  }
-
-
-
+ 
   /**
      STRONGLY CONNECTED COMPONENTS
    **/
@@ -153,22 +123,27 @@ namespace graph {
 
      Given a graph, returns a vector of vectors, each of which is a
      single strongly-connected-component of g.
+
+     g is a graph
+     d is the dual of the graph, computed using dual(g)
   **/
 
   template<class E>
-  vector<vector<typename Graph<E>::node_type>> scc(Graph<E>& g) {
+  vector<vector<typename Graph<E>::node_type>> scc(const Graph<E>& g, const Graph<E>& d) {
     using node_type = typename Graph<E>::node_type;
 
     // find completion times in primary graph
     vector<node_type> finish_times;
     auto post1 = [&](int node) { finish_times.push_back(node); };
-    dfw_all(g, Do_Nothing<node_type>{}, post1);
+    vector<bool> visited(g.node_count(), false);
+    for (node_type i = 0; i < g.node_count(); i++) {
+      if (!visited[i]) dfw(g, i, visited, Do_Nothing<node_type>{}, post1);
+    }
     
     // collect components in dual graph
-    Graph<E> d = dual(g);
     vector<vector<node_type>> result;
     vector<node_type> current;
-    vector<bool> visited(d.node_count(), false);
+    visited.assign(d.node_count(), false);
     auto pre2 = [&](int node) { current.push_back(node); };
     for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
       if (!visited[*n]) {
@@ -207,7 +182,7 @@ namespace graph {
 
   template<class E, template<class,class> class H>
   pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type>>
-    dijkstra(Graph<E> g,
+    dijkstra(const Graph<E>& g,
 	     typename Graph<E>::node_type source_node,
 	     typename E::weight_type max_edge_cost) {
     
@@ -248,7 +223,7 @@ namespace graph {
 
   template<class E, template<class,class> class H>
   pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type>>
-    dijkstra(Graph<E> g,
+    dijkstra(const Graph<E>& g,
 	     typename Graph<E>::node_type source_node) {
     using weight_type = typename E::weight_type;
     weight_type max_edge_cost = 0;

@@ -13,7 +13,6 @@ void print_results(pair<vector<T>, vector<J>> results) {
   for (typename vector<T>::size_type i = 0; i < results.first.size(); i++) {
     cout << "node " << i << " cost " << results.first[i] << " parent " << results.second[i] << '\n';
   }
-
 }
 
 void test_dijkstra() {
@@ -25,6 +24,7 @@ void test_dijkstra() {
 			  {5,4,2}};
    auto dial_results = dijkstra<Weighted_Edge, dial_heap>(g, 0);
    auto radix_results = dijkstra<Weighted_Edge, radix_heap>(g, 0);
+   // TODO actually verify content
    if (dial_results != radix_results) {
      cerr << "Graphs did not match\n";
      print_graph(g);

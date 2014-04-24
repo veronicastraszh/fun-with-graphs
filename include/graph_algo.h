@@ -151,16 +151,14 @@ namespace graph {
     using node_type = typename Graph<E>::node_type;
     vector<node_type> results;
     dfw<E> walk{g};
-    auto post = [&](node_type n) { results.push_back(n); };
-    auto edge = [&](E e) {
+    walk.post = [&](node_type n) { results.push_back(n); };
+    walk.edge = [&](E e) {
       if (walk.classify_edge(e) == Edge_Type::back) {
 	ostringstream s;
 	s << "Cycle found in graph at edge " << e;
 	throw cycle_found{s.str()};
       }
     };
-    walk.post = post;
-    walk.edge = edge;
     for (node_type n = 0; n < g.node_count(); n++) {
       if (!walk.processed(n)) walk(g,n);
     }

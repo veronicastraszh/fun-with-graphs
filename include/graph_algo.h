@@ -259,7 +259,7 @@ namespace graph {
 	} else if (this_cost < costs[edge.target]) {
 	  // existing entry improved
 	  parents[edge.target] = node;
-	  locations[edge.target] = heap.decrease_key(locations[edge.target], costs[edge.target], this_cost);
+	  heap.decrease_key(locations[edge.target], costs[edge.target], this_cost);
 	  costs[edge.target] = this_cost;
 	}
       }

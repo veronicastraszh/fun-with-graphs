@@ -26,7 +26,7 @@ void test_dijkstra() {
    auto radix_results = dijkstra<Weighted_Edge, radix_heap>(g, 0);
    // TODO actually verify content
    if (dial_results != radix_results) {
-     cerr << "Graphs did not match\n";
+     cerr << "Dijkstra failed\nGraphs did not match\n";
      print_graph(g);
      print_results(dial_results);
      print_results(radix_results);

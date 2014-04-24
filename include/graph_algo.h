@@ -41,79 +41,109 @@ namespace graph {
     }
   };
 
-  template<class T, class S>
-  class Do_Nothing2 {
-  public:
-    void operator()(T& nothing, S&nothing2) {
-#pragma unused(nothing)
-#pragma unused(nothing2)
-    }
-  };
-
-  namespace dfw_help {
-
-    enum class Visit_Type { pre, post };
-    
-    template<class E>
-    struct Visit {
-      using node_type = typename Graph<E>::node_type;
-      Visit(E e) : type{Visit_Type::pre} { edge = e; };
-      Visit(node_type n) : type{Visit_Type::post} { node = n; };
-      Visit_Type type;
-      union {
-	node_type node;
-	E edge;
-      };
-    };
-    
-  }
+  enum class Edge_Type { tree, forward, back, cross };
 
   /**
      dfw - depth first walk
-     
-     Walks from start_node, marking the visited nodes in the
-     vector<bool>. For each node, call pre and post respecively in
-     pre-order and post-order. For each edge, we call edge as we
-     encounter it.
 
-     Note this will only visit nodes reachable from start_node.
-   **/
+     This class holds the needed data for a detailed depth first walk of a graph.
+
+     For examples, see the algorithms below, such as top_sort or scc.
+
+     The data structures are as follows:
+
+     parent[node] := the parents of the node in the depth first walk
+     entered[node] := a tick of when this node was entered, orders the nodes
+     exited[node] := a tick of when this node was completed
+
+     pre, post, and edge are callback functions, for pre-order and post-order walks,
+       and edge classification
+
+     the callback functions can set "finished" true, which will halt the walk
+
+     set directed false to not explore reverse edges.
+  **/
 
   template<class E,
 	   class Pre=Do_Nothing<typename Graph<E>::node_type>,
 	   class Post=Do_Nothing<typename Graph<E>::node_type>,
-	   class Edge=Do_Nothing<E>>
-  void dfw(const Graph<E>& g,
-	   typename Graph<E>::node_type start_node,
-	   vector<bool>& visited, // modified in place
-	   Pre pre=Do_Nothing<typename Graph<E>::node_type>{},
-	   Post post=Do_Nothing<typename Graph<E>::node_type>{},
-	   Edge edge=Do_Nothing<E>{}) {
-    using namespace dfw_help;
-    stack<Visit<E>> visits;
-    pre(start_node);
-    visited[start_node] = true;
-    visits.push(Visit<E>{start_node});
-    for (auto e : g[start_node]) visits.push(Visit<E>{e});
-    while(!visits.empty()) {
-      Visit<E> visit = visits.top(); visits.pop();
-      switch(visit.type) {
-      case Visit_Type::pre:
-	edge(visit.edge);
-	if (visited[visit.edge.target]) break;
-	pre(visit.edge.target);
-	visited[visit.edge.target] = true;
-	visits.push(Visit<E>{visit.edge.target});
-	for (auto e : g[visit.edge.target]) visits.push(Visit<E>{e});
-	break;
-      case Visit_Type::post:
-	post(visit.node);
-	break;
+	   class Edge=Do_Nothing<E> >
+  class dfw {
+  public:
+    using node_type = typename Graph<E>::node_type;
+    using tick_type = unsigned long;
+    const node_type token_node = numeric_limits<node_type>::max();
+    const tick_type token_tick = numeric_limits<tick_type>::max();
+    
+    vector<node_type> parent;
+    vector<tick_type> entered;
+    vector<tick_type> exited;
+    Pre pre;
+    Post post;
+    Edge edge;
+    bool finished{false};
+    bool directed{true};
+      
+    dfw(const Graph<E>& g,
+	Pre pre_=Do_Nothing<node_type>{},
+	Post post_=Do_Nothing<node_type>{},
+	Edge edge_=Do_Nothing<E>{}) :
+      parent{vector<node_type>(g.node_count(), token_node)},
+      entered{vector<tick_type>(g.node_count(), token_tick)},
+      exited{vector<tick_type>(g.node_count(), token_tick)},
+      pre(pre_),
+      post(post_),
+      edge(edge_) {};
+    
+    void mark_discovered(node_type n) { entered[n] = ticks++; }
+    bool discovered(node_type n) const { return entered[n] != token_tick; };
+    
+    void mark_processed(node_type n) { exited[n] = ticks++; };
+    bool processed(node_type n) const { return exited[n] != token_tick; };
+
+    bool entered_before(node_type n, node_type m) { return entered[n] < entered[m]; }
+    bool exited_before(node_type n, node_type m) { return exited[n] < exited[m]; }
+    
+    Edge_Type classify_edge(E e) const;
+    
+    // main operation
+    void operator()(const Graph<E>& g, node_type n);
+
+  private:
+    tick_type ticks{0};    
+  };
+
+  // the main walk
+  template<class E, class Pre, class Post, class Edge>
+  void dfw<E,Pre,Post,Edge>::operator()(const Graph<E>& g, node_type n) {
+    if (finished) return;
+    mark_discovered(n);
+    pre(n);
+    for (auto e : g[n]) {
+      if (!discovered(e.target)) {
+	parent[e.target] = n;
+	edge(e);
+	(*this)(g, e.target);
+      } else if (directed || !processed(e.target)) {
+	edge(e);
       }
+      if (finished) return;
     }
+    post(n);
+    mark_processed(n);
+  }
+ 
+  // edge classification
+  template<class E, class Pre, class Post, class Edge>
+  Edge_Type dfw<E,Pre,Post,Edge>::classify_edge(E e) const {
+    if (parent[e.target] == e.source) return Edge_Type::tree;
+    if (discovered(e.target) && !processsed(e.target)) return Edge_Type::back;
+    if (processed(e.target) && entered_before(e.source, e.target)) return Edge_Type::forward;
+    if (processed(e.target) && entered_before(e.target, e.source)) return Edge_Type::cross;
+    throw logic_error{"Unclassified edge"};    
   }
 
- 
+
   /**
      STRONGLY CONNECTED COMPONENTS
    **/
@@ -135,19 +165,19 @@ namespace graph {
     // find completion times in primary graph
     vector<node_type> finish_times;
     auto post1 = [&](int node) { finish_times.push_back(node); };
-    vector<bool> visited(g.node_count(), false);
-    for (node_type i = 0; i < g.node_count(); i++) {
-      if (!visited[i]) dfw(g, i, visited, Do_Nothing<node_type>{}, post1);
+    dfw<E,Do_Nothing<node_type>,decltype(post1)> walk1{g,Do_Nothing<node_type>{},post1};
+    for (node_type n = 0; n < g.node_count(); n++) {
+      if (!walk1.processed(n)) walk1(g,n);
     }
     
     // collect components in dual graph
     vector<vector<node_type>> result;
     vector<node_type> current;
-    visited.assign(d.node_count(), false);
     auto pre2 = [&](int node) { current.push_back(node); };
+    dfw<E,decltype(pre2)> walk2{d,pre2};
     for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
-      if (!visited[*n]) {
-	dfw(d, *n, visited, pre2);
+      if (!walk2.processed(*n)) {
+	walk2(d, *n);
 	result.push_back(current);
 	current = vector<node_type>{};
       }
@@ -181,10 +211,10 @@ namespace graph {
    **/
 
   template<class E, template<class,class> class H>
-  pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type>>
-    dijkstra(const Graph<E>& g,
-	     typename Graph<E>::node_type source_node,
-	     typename E::weight_type max_edge_cost) {
+  pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type> >
+  dijkstra(const Graph<E>& g,
+	   typename Graph<E>::node_type source_node,
+	   typename E::weight_type max_edge_cost) {
     
     using node_type = typename Graph<E>::node_type;
     using weight_type = typename E::weight_type;

@@ -33,13 +33,18 @@ namespace graph {
      DEPTH FIRST WALK
    **/
 
+//   template<class T>
+//   class Do_Nothing {
+//   public:
+//     void operator()(T& nothing) {
+// #pragma unused(nothing)
+//     }
+//   };
+
   template<class T>
-  class Do_Nothing {
-  public:
-    void operator()(T& nothing) {
-#pragma unused(nothing)
-    }
-  };
+  void do_nothing(T& _x) {
+#pragma unused(_x)
+  } 
 
   enum class Edge_Type { tree, forward, back, cross };
 
@@ -65,9 +70,9 @@ namespace graph {
   **/
 
   template<class E,
-	   class Pre=Do_Nothing<typename Graph<E>::node_type>,
-	   class Post=Do_Nothing<typename Graph<E>::node_type>,
-	   class Edge=Do_Nothing<E> >
+	   class Pre=decltype(&do_nothing<typename Graph<E>::node_type>),
+           class Post=decltype(&do_nothing<typename Graph<E>::node_type>),
+           class Edge=decltype(&do_nothing<E>) >
   class dfw {
   public:
     using node_type = typename Graph<E>::node_type;
@@ -85,9 +90,9 @@ namespace graph {
     bool directed{true};
       
     dfw(const Graph<E>& g,
-	Pre pre_=Do_Nothing<node_type>{},
-	Post post_=Do_Nothing<node_type>{},
-	Edge edge_=Do_Nothing<E>{}) :
+	Pre pre_=&do_nothing<node_type>,
+	Post post_=&do_nothing<node_type>,
+	Edge edge_=&do_nothing<E>) :
       parent{vector<node_type>(g.node_count(), token_node)},
       entered{vector<tick_type>(g.node_count(), token_tick)},
       exited{vector<tick_type>(g.node_count(), token_tick)},
@@ -165,7 +170,7 @@ namespace graph {
     // find completion times in primary graph
     vector<node_type> finish_times;
     auto post1 = [&](int node) { finish_times.push_back(node); };
-    dfw<E,Do_Nothing<node_type>,decltype(post1)> walk1{g,Do_Nothing<node_type>{},post1};
+    dfw<E,decltype(&do_nothing<node_type>),decltype(post1)> walk1{g,&do_nothing<node_type>,post1};
     for (node_type n = 0; n < g.node_count(); n++) {
       if (!walk1.processed(n)) walk1(g,n);
     }

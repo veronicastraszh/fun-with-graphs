@@ -1,17 +1,60 @@
 #include <string>
-#include <sstream>
 #include <algorithm>
 
 #include "graph.h"
 #include "graph_algo.h"
-#include "heaps.h"
 
 #include "graph_utils.h"
 
 using namespace std;
 using namespace graph;
-using namespace graph::heaps;
 
+
+void test_top_sort() {
+  Graph<Edge> g {{0,2},{0,12},
+                 {1,4},{1,2},{1,8},
+                 {2,7},
+                 {3,8},{3,13},{3,6},
+                 {4,7},
+                 {5,0},{5,4},{5,11},
+                 {8,0},{8,9},{8,13},
+                 {9,11},{9,10},
+                 {10,6},
+ 		 {12,9},
+		 {13,0}};
+  using node_type = Graph<Edge>::node_type;
+  vector<node_type> results = top_sort(g);
+
+  // here we do a series of walks to ensure we do not find any errors
+  for (auto i = results.begin(); i != results.end(); i++) {
+    dfw<Edge> walk{g};
+    walk.pre = [&](node_type n) {
+      if (find(i+1,results.end(),n) != results.end()) {
+	cout << "Topological Sort Failed!\n";
+	cout << n << " found in list after " << *i << '\n';
+	print_graph(g);
+	for (auto n : results) cout << n << ' ';
+	cout << '\n';
+	exit(1);
+      }
+    };
+    walk(g,*i);
+  }
+  cout << "Topological Sort passed\n";
+}
+
+void test_top_sort_cycle() {
+  Graph<Edge> g {{0,1},{1,2},{1,3},{2,4},{3,5},{5,1}};
+  using node_type = Graph<Edge>::node_type;
+  try {
+    vector<node_type> result = top_sort(g);
+  } catch (cycle_found) {
+    cout << "Topological Sort Cycle Detection passed\n";
+    return;
+  }
+  cout << "Topolgical Sort failed cycle detection\n";
+  exit(1);
+}
 
 void test_scc() {
   Graph<Edge> g {{0,1}, {1,2}, {1,3},
@@ -50,5 +93,7 @@ void test_scc() {
 }
 
 int main() {
+  test_top_sort();
+  test_top_sort_cycle();
   test_scc();
 }

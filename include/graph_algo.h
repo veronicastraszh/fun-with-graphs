@@ -8,13 +8,16 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
+#include <functional>
+#include <string>
+#include <sstream>
 #include "graph.h"
 #include "edge.h"
 
 using namespace std;
 
 namespace graph {
-
+  
   /**
      COMPUTE DUAL TO A GRAPH
    **/
@@ -32,15 +35,6 @@ namespace graph {
   /**
      DEPTH FIRST WALK
    **/
-
-//   template<class T>
-//   class Do_Nothing {
-//   public:
-//     void operator()(T& nothing) {
-// #pragma unused(nothing)
-//     }
-//   };
-
 
   enum class Edge_Type { tree, forward, back, cross };
 
@@ -93,8 +87,8 @@ namespace graph {
     void mark_processed(node_type n) { exited[n] = ticks++; };
     bool processed(node_type n) const { return exited[n] != token_tick; };
 
-    bool entered_before(node_type n, node_type m) { return entered[n] < entered[m]; }
-    bool exited_before(node_type n, node_type m) { return exited[n] < exited[m]; }
+    bool entered_before(node_type n, node_type m) const { return entered[n] < entered[m]; }
+    bool exited_before(node_type n, node_type m) const { return exited[n] < exited[m]; }
     
     Edge_Type classify_edge(E e) const;
     
@@ -129,10 +123,48 @@ namespace graph {
   template<class E>
   Edge_Type dfw<E>::classify_edge(E e) const {
     if (parent[e.target] == e.source) return Edge_Type::tree;
-    if (discovered(e.target) && !processsed(e.target)) return Edge_Type::back;
+    if (discovered(e.target) && !processed(e.target)) return Edge_Type::back;
     if (processed(e.target) && entered_before(e.source, e.target)) return Edge_Type::forward;
     if (processed(e.target) && entered_before(e.target, e.source)) return Edge_Type::cross;
     throw logic_error{"Unclassified edge"};    
+  }
+
+
+  /**
+     TOPOLOGICAL SORT
+  **/
+
+  /**
+     top_sort - topological sort
+
+     This returns the list in _reverse_ of sorted order
+  **/
+
+  class cycle_found : public logic_error {
+  public:
+    cycle_found(string s) : logic_error{s} {};
+    cycle_found(char *c) : logic_error{c} {};
+  };
+
+  template<class E>
+  vector<typename Graph<E>::node_type> top_sort(const Graph<E>& g) {
+    using node_type = typename Graph<E>::node_type;
+    vector<node_type> results;
+    dfw<E> walk{g};
+    auto post = [&](node_type n) { results.push_back(n); };
+    auto edge = [&](E e) {
+      if (walk.classify_edge(e) == Edge_Type::back) {
+	ostringstream s;
+	s << "Cycle found in graph at edge " << e;
+	throw cycle_found{s.str()};
+      }
+    };
+    walk.post = post;
+    walk.edge = edge;
+    for (node_type n = 0; n < g.node_count(); n++) {
+      if (!walk.processed(n)) walk(g,n);
+    }
+    return results;
   }
 
 

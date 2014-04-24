@@ -41,10 +41,6 @@ namespace graph {
 //     }
 //   };
 
-  template<class T>
-  void do_nothing(T& _x) {
-#pragma unused(_x)
-  } 
 
   enum class Edge_Type { tree, forward, back, cross };
 
@@ -69,10 +65,7 @@ namespace graph {
      set directed false to not explore reverse edges.
   **/
 
-  template<class E,
-	   class Pre=decltype(&do_nothing<typename Graph<E>::node_type>),
-           class Post=decltype(&do_nothing<typename Graph<E>::node_type>),
-           class Edge=decltype(&do_nothing<E>) >
+  template<class E>
   class dfw {
   public:
     using node_type = typename Graph<E>::node_type;
@@ -83,22 +76,16 @@ namespace graph {
     vector<node_type> parent;
     vector<tick_type> entered;
     vector<tick_type> exited;
-    Pre pre;
-    Post post;
-    Edge edge;
+    function<void(node_type)> pre{[](node_type n) {}};
+    function<void(node_type)> post{[](node_type n) {}};
+    function<void(E)> edge{[](E e) {}};
     bool finished{false};
     bool directed{true};
       
-    dfw(const Graph<E>& g,
-	Pre pre_=&do_nothing<node_type>,
-	Post post_=&do_nothing<node_type>,
-	Edge edge_=&do_nothing<E>) :
+    dfw(const Graph<E>& g) :
       parent{vector<node_type>(g.node_count(), token_node)},
       entered{vector<tick_type>(g.node_count(), token_tick)},
-      exited{vector<tick_type>(g.node_count(), token_tick)},
-      pre(pre_),
-      post(post_),
-      edge(edge_) {};
+      exited{vector<tick_type>(g.node_count(), token_tick)} {};
     
     void mark_discovered(node_type n) { entered[n] = ticks++; }
     bool discovered(node_type n) const { return entered[n] != token_tick; };
@@ -119,8 +106,8 @@ namespace graph {
   };
 
   // the main walk
-  template<class E, class Pre, class Post, class Edge>
-  void dfw<E,Pre,Post,Edge>::operator()(const Graph<E>& g, node_type n) {
+  template<class E>
+  void dfw<E>::operator()(const Graph<E>& g, node_type n) {
     if (finished) return;
     mark_discovered(n);
     pre(n);
@@ -139,8 +126,8 @@ namespace graph {
   }
  
   // edge classification
-  template<class E, class Pre, class Post, class Edge>
-  Edge_Type dfw<E,Pre,Post,Edge>::classify_edge(E e) const {
+  template<class E>
+  Edge_Type dfw<E>::classify_edge(E e) const {
     if (parent[e.target] == e.source) return Edge_Type::tree;
     if (discovered(e.target) && !processsed(e.target)) return Edge_Type::back;
     if (processed(e.target) && entered_before(e.source, e.target)) return Edge_Type::forward;
@@ -169,8 +156,8 @@ namespace graph {
 
     // find completion times in primary graph
     vector<node_type> finish_times;
-    auto post1 = [&](int node) { finish_times.push_back(node); };
-    dfw<E,decltype(&do_nothing<node_type>),decltype(post1)> walk1{g,&do_nothing<node_type>,post1};
+    dfw<E> walk1{g};
+    walk1.post = [&](int node) { finish_times.push_back(node); };
     for (node_type n = 0; n < g.node_count(); n++) {
       if (!walk1.processed(n)) walk1(g,n);
     }
@@ -178,8 +165,8 @@ namespace graph {
     // collect components in dual graph
     vector<vector<node_type>> result;
     vector<node_type> current;
-    auto pre2 = [&](int node) { current.push_back(node); };
-    dfw<E,decltype(pre2)> walk2{d,pre2};
+    dfw<E> walk2{d};
+    walk2.pre = [&](int node) { current.push_back(node); };
     for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
       if (!walk2.processed(*n)) {
 	walk2(d, *n);

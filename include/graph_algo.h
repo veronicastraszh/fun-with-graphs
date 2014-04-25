@@ -179,7 +179,7 @@ namespace graph {
        scc - strongly connected components
        
        Given a graph, returns a vector of vectors, each of which is a
-       single strongly-connected-component of g.
+       single strongly connected component of g.
        
        g is a graph
        d is the dual of the graph, computed using dual(g)
@@ -354,6 +354,8 @@ namespace graph {
                 if (costs[e.target] > candidate_cost) {
                     costs[e.target] = candidate_cost;
                     parents[e.target] = n;
+                    // e.target has improved; perhaps its children
+                    // will improve, so recheck
                     if (!in_q[e.target]) {
                         q.push(e.target); in_q[e.target] = true;
                     }
@@ -409,12 +411,14 @@ namespace graph {
                 if (costs[e.target] > candidate_cost) {
                     costs[e.target] = candidate_cost;
                     parents[e.target] = n;
+                    // e.target has improved, so recheck its children
                     if (!in_dq[e.target]) {
                         if (seen[e.target]) {
                             // nodes we have already seen go up front,
-                            // so they are re-examined sooner
+                            // as their children are likely in-queue
                             dq.push_front(e.target); in_dq[e.target] = true;
                         } else {
+                            // new nodes can wait
                             dq.push_back(e.target); in_dq[e.target] = true; seen[e.target] = true;
                         }
                     }

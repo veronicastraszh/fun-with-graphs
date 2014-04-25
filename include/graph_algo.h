@@ -143,13 +143,13 @@ namespace graph {
        This returns the list in _reverse_ of sorted order
     **/
 
-    template<E>
+    template<class E>
     class cycle_found : public logic_error {
     public:
-        using parents_type = vector<typename E::edge_type>;
+        using parents_type = vector<typename E::node_type>;
         E edge;
-        parent_type parents;
-        cycle_found(E e, parents_type p, char *c) : edge{e}, parents{p}, logic_error{c} {};
+        parents_type parents;
+        cycle_found(E e, parents_type p, string s) : logic_error{s}, edge(e), parents{p} {};
     };
     
     template<class E>
@@ -161,7 +161,7 @@ namespace graph {
         walk.post = [&](node_type n) { results.push_back(n); };
         walk.edge = [&](E e) {
             if (walk.classify_edge(e) == Edge_Type::back) {
-                throw cycle_found{e, walk.parents, "Cycle found"};
+                throw cycle_found<E>{e, walk.parents, "Cycle found"};
             }
         };
         for (node_type n = 0; n < g.node_count(); n++) {
@@ -318,12 +318,13 @@ namespace graph {
     public:
         N node;
         vector<N> parents;
-        negative_cycle_found(N n, vector<N> p, char *c) : logic_error{c}, node{n}, parents{p} {};
+        negative_cycle_found(N n, vector<N> p, string s) : logic_error{s}, node{n}, parents{p} {};
     };
     
     template<class E>
     pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type> >
-    q_lc(const Graph<E>& g, typename Graph<E>::node_type source_node)
+    q_lc(const Graph<E>& g,
+         typename Graph<E>::node_type source_node)
     {
         using node_type = typename Graph<E>::node_type;
         using weight_type = typename E::weight_type;
@@ -332,20 +333,20 @@ namespace graph {
         vector<node_type> parents(g.node_count(), numeric_limits<node_type>::max());
 
         // a queue to hold our nodes-to-examine
-        queue<node_type> queue;
-        vector<bool> in_queue(g.node_count(), false);
+        queue<node_type> q;
+        vector<bool> in_q(g.node_count(), false);
 
         // count how many times we've seen a node, for cycle detection
-        vector<node_type> counts(g.node_count);
+        vector<node_type> counts(g.node_count());
         
         costs[source_node] = 0;
-        queue.push(source_node);
-        in_queue[source_node] = true;
+        q.push(source_node);
+        in_q[source_node] = true;
         
-        while(!queue.empty()) {
-            node_type n = queue.front(); queue.pop(); in_queue[n] = false;
+        while(!q.empty()) {
+            node_type n = q.front(); q.pop(); in_q[n] = false;
             if (++counts[n] >= g.node_count()) {
-                throw negative_cycle_found{n, parents, "Negative cycle found"};
+                throw negative_cycle_found<node_type>{n, parents, "Negative cycle found"};
             }
             for (auto e : g[n]) {
                 weight_type candidate_cost = costs[n] + e.weight;
@@ -353,8 +354,8 @@ namespace graph {
                 if (costs[e.target] > candidate_cost) {
                     costs[e.target] = candidate_cost;
                     parents[e.target] = n;
-                    if (!in_queue[e.target]) {
-                        queue.push(e.target); in_queue[e.target] = true;
+                    if (!in_q[e.target]) {
+                        q.push(e.target); in_q[e.target] = true;
                     }
                 }
             }
@@ -362,9 +363,25 @@ namespace graph {
         return make_pair(costs, parents);
     }
 
+    /**
+       dq_lc - deque-based label correcting algorithm
+
+       As q_lc, this uses a label correcting strategy, which allows
+       for negative edge weights. Unlike q_lc, this method does not
+       perform negative cycle detection. If a negative cycle is
+       present, ths algorithm will diverge. (TODO: fix this.)
+
+       The worst case complexity of this algorithm is poor,
+       O(min(n*m*C,m*2^n)), where C is the maximum edge cost.
+
+       However, note that this algorithm has good average case
+       performance on sparse graphs.
+     **/
+
     template<class E>
     pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type> >
-    dq_lc(const Graph<E>& g, typename Graph<E>::node_type source_node)
+    dq_lc(const Graph<E>& g,
+          typename Graph<E>::node_type source_node)
     {
         using node_type = typename Graph<E>::node_type;
         using weight_type = typename E::weight_type;
@@ -372,31 +389,33 @@ namespace graph {
         vector<weight_type> costs(g.node_count(), numeric_limits<weight_type>::max());
         vector<node_type> parents(g.node_count(), numeric_limits<node_type>::max());
 
-        // a queue to hold our nodes-to-examine
-        deque<node_type> deque;
-        vector<bool> in_deque(g.node_count(), false);
+        // a deque to hold our nodes-to-examine
+        deque<node_type> dq;
+        vector<bool> in_dq(g.node_count(), false);
 
         // has this node been seen?
         vector<bool> seen(g.node_count(), false);
         
         costs[source_node] = 0;
-        queue.push_back(source_node);
-        in_deque[source_node] = true;
+        dq.push_back(source_node);
+        in_dq[source_node] = true;
         seen[source_node] = true;
         
-        while(!deque.empty()) {
-            node_type n = deque.front(); deque.pop_front(); in_deque[n] = false;
+        while(!dq.empty()) {
+            node_type n = dq.front(); dq.pop_front(); in_dq[n] = false;
             for (auto e : g[n]) {
                 weight_type candidate_cost = costs[n] + e.weight;
                 // if this edge is better, use that
                 if (costs[e.target] > candidate_cost) {
                     costs[e.target] = candidate_cost;
                     parents[e.target] = n;
-                    if (!in_deque[e.target]) {
-                        if (seen[target]) {
-                            deque.push_front(n); in_deque[n] = true;
+                    if (!in_dq[e.target]) {
+                        if (seen[e.target]) {
+                            // nodes we have already seen go up front,
+                            // so they are re-examined sooner
+                            dq.push_front(e.target); in_dq[e.target] = true;
                         } else {
-                            deque.push_back(n); in_deque[n] = true; seen[n] = true;
+                            dq.push_back(e.target); in_dq[e.target] = true; seen[e.target] = true;
                         }
                     }
                 }

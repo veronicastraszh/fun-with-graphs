@@ -206,7 +206,7 @@ namespace graph {
         for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
             if (!walk2.processed(*n)) {
                 walk2(d, *n);
-                result.push_back(current);
+                result.push_back(move(current));
                 current = vector<node_type>{};
             }
         }

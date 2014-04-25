@@ -30,9 +30,20 @@ namespace graph {
            as follows: if we call find_min(), and the heap returns an
            element whose key was 15, no element will ever be added with
            a key of less than 15.
+
+           3. The key size of new elements added to the heap are
+           limited as follows: no new element will have a weight
+           greater than the current best-in-heap plus the maximum edge
+           cost.
            
-           This second constraint follows from the fact that shorter paths
-           are always discovered before longer paths.
+           This second constraint follows from the fact that shorter
+           paths are always discovered before longer paths and that
+           negative cost edges are disallowed. The third constraint
+           follows from the way Dijkstra fans out over the
+           nodes. Since the algorithm searches the best-so-far nodes,
+           the maximum under consideration at any one time is limited
+           by the maximum edge cost. Together these facts allow our
+           heaps to be optimized for a narrow range of values.
            
            Two heaps are provided:
            

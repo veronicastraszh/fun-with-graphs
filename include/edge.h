@@ -14,34 +14,86 @@ namespace graph {
     /**
        A BASIC EDGE
     **/
-    
-    struct Edge {
-        using node_type = unsigned int;
-        node_type source;
-        node_type target;
+
+    template<class T=unsigned int>
+    class edge {
+    public:
+        using node_type = T;
+
+        edge(node_type source, node_type target) : s{source}, t{target} {}
+        node_type source() const { return s; };
+        node_type target() const { return t; };
+    private:
+        node_type s;
+        node_type t;
     };
-    
-    ostream& operator<<(ostream& os, Edge e);
-    
-    Edge reverse_edge(Edge e);
-    
+
+    template<class T>
+    ostream& operator<<(ostream& os, edge<T> e)
+    {
+        return os << '{' << e.source() << ',' << e.target() << '}';
+    }
+
+    template<class T>
+    edge<T> reverse_edge(edge<T> e)
+    {
+        return edge<T>{e.target(), e.source()};
+    }
+
+    template<class T>
+    edge<T> merge_edges(typename edge<T>::node_type s,
+                        typename edge<T>::node_type t,
+                        edge<T> a,
+                        edge<T> b)
+    {
+        return edge<T>{s, t};
+    }
+        
     
     /**
        A WEIGHTED EDGE
     **/
-    
-    struct Weighted_Edge {
-        using node_type = unsigned int;
-        using weight_type = unsigned long;
-        node_type source;
-        node_type target;
-        weight_type weight;
+
+    template<class W=unsigned long, class T=unsigned int>
+    struct weighted_edge {
+    public:
+        using node_type = T;
+        using weight_type = W;
+
+        weighted_edge(node_type source, node_type target, weight_type weight) :
+            s{source}, t{target}, w{weight} {}
+        node_type source() const { return s; };
+        node_type target() const { return t; };
+        weight_type& weight() { return w; };
+        weight_type weight() const { return w; };
+    private:
+        node_type s;
+        node_type t;
+        weight_type w;
     };
+
+
+    template<class W=unsigned long, class T=unsigned int>
+    ostream& operator<<(ostream& os, weighted_edge<W,T> e)
+    {
+        return os << '{' << e.source() << ',' << e.target() << "}(" << e.weight() << ")";
+    }
     
-    ostream& operator<<(ostream& os, Weighted_Edge e);
-    
-    Weighted_Edge reverse_edge(Weighted_Edge e);
-    
+    template<class W=unsigned long, class T=unsigned int>
+    weighted_edge<W,T> reverse_edge(weighted_edge<W,T> e)
+    {
+        return weighted_edge<W,T>{e.target(), e.source(), e.weight()};
+    }
+
+    template<class W=unsigned long, class T=unsigned int>
+    weighted_edge<W,T> merge_edges(typename weighted_edge<W,T>::nodetype s,
+                                  typename weighted_edge<W,T>::nodetype t,
+                                  weighted_edge<W,T> a,
+                                  weighted_edge<W,T> b)
+    {
+        return weighted_edge<W,T>{s,t,a.weight() + b.weight()};
+    }
+
 }
 
 #endif

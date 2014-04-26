@@ -1,18 +1,11 @@
 
-.DUMMY: clean
+.DUMMY: all, tests, clean
 
 all: tests
 
-tests: lib
+tests:
 	(cd test; make run)
-
-build: lib
-	(cd test; make)
-
-lib:
-	(cd src; make)
 
 clean:
 	(cd test; make clean)
-	(cd src; make clean)
 

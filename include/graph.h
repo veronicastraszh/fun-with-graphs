@@ -12,46 +12,70 @@ using namespace std;
 
 namespace graph {
 
-    template<class E> class Graph_Iterator;
+    template<class G> class graph_iterator;
   
     /**
        A Graph.
        
        The template parameter E should be some edge type, from
-       edges.h. For a basic graph, any type with members named source
-       and target will do.
+       edges.h. For a basic graph, any type with members named
+       source() and target() will do.
        
        Edges are added to a graph using the += operator.
        
-       Edges are looked up using the [] operator, where the node id is provided.
+       Edges are looked up using the [] operator, where the node id is
+       provided.
        
        A graph supports iteration, which provides all edges.
     **/
   
     template<class E>
-    class Graph {
+    class graph {
     public:
         using edge_type = E;
         using size_type = typename vector<edge_type>::size_type;
         using node_type = typename E::node_type;
         
-        Graph() {};
-        Graph(initializer_list<edge_type> es) {
+        graph() {};
+        graph(const graph<edge_type>& g)
+        {
+            for (auto e : g) operator+=(e);
+        }
+        graph(graph<edge_type>&& g)
+        {
+            swap(edges, g.edges);
+            swap(edges_n, g.edges_n);
+        }
+        graph(initializer_list<edge_type> es)
+        {
             for (auto e : es) operator+=(e);
+        }
+        void operator=(const graph<edge_type>& g)
+        {
+            edges = g.edges;
+            edges_n = g.edges_n;
+        }
+        void operator=(const graph<edge_type>&& g)
+        {
+            edges = vector<vector<edge_type>>(0);
+            edges_n = 0;
+            swap(edges, g.edges);
+            swap(edges_n, g.edges_n);
         }
     
         node_type node_count() const { return static_cast<node_type>(edges.size()); }
         size_type edge_count() const { return edges_n; }
         
-        const vector<edge_type>& operator[](node_type node) { return edges[node]; }
+        vector<edge_type>& operator[](node_type node) { return edges[node]; }
         const vector<edge_type>& operator[](node_type node) const { return edges[node]; }
         
-        Graph_Iterator<E> begin() const { return Graph_Iterator<E>{*this, 0}; }
-        Graph_Iterator<E> end() const {
-            return Graph_Iterator<E>{*this, static_cast<node_type>(edges.size()), 0};
+        graph_iterator<graph<E> > begin() const { return graph_iterator<graph<E> >{*this, 0}; }
+        graph_iterator<graph<E> > end() const
+        {
+            return graph_iterator<graph<E> >{*this, static_cast<node_type>(edges.size()), 0};
         }
         
-        Graph& operator+=(edge_type edge);
+        graph& operator+=(edge_type edge);
         
     private:
         size_type edges_n {0};
@@ -59,12 +83,13 @@ namespace graph {
     };
     
     template<class E>
-    Graph<E>& Graph<E>::operator+=(E edge) {
-        node_type maxVertex = max(edge.source, edge.target);
-        if (maxVertex >= edges.size()) {
-            edges.resize(maxVertex+1);
+    graph<E>& graph<E>::operator+=(E e)
+    {
+        node_type max_vertex = max(e.source(), e.target());
+        if (max_vertex >= edges.size()) {
+            edges.resize(max_vertex+1);
         }
-        edges[edge.source].push_back(edge);
+        edges[e.source()].push_back(e);
         edges_n += 1;
         return *this;
     }
@@ -72,23 +97,25 @@ namespace graph {
     
     // A graph iterator
     
-    template<class E>
-    class Graph_Iterator {
+    template<class G>
+    class graph_iterator {
     public:
-        using node_type = typename E::node_type;
+        using edge_type = typename G::edge_type;
+        using node_type = typename edge_type::node_type;
         
-        Graph_Iterator(const Graph<E>& g, node_type n) : graph{g}, node{n}, offset{0} { correct_node(); };
-        Graph_Iterator(const Graph<E>& g, node_type n, node_type o) : graph{g}, node{n}, offset{o} {};
+        graph_iterator(const G& g, node_type n) : graph{g}, node{n}, offset{0} { correct_node(); };
+        graph_iterator(const G& g, node_type n, node_type o) : graph{g}, node{n}, offset{o} {};
   
-        const E& operator*() { return graph[node][offset]; }
-        Graph_Iterator operator++(int) { auto old = *this; ++offset; correct_node(); return old; }
-        Graph_Iterator& operator++() { ++offset; correct_node(); return *this; }
+        const edge_type& operator*() { return graph[node][offset]; }
+        const edge_type& operator*() const { return graph[node][offset]; }
+        graph_iterator operator++(int) { auto old = *this; ++offset; correct_node(); return old; }
+        graph_iterator& operator++() { ++offset; correct_node(); return *this; }
         
-        bool operator==(const Graph_Iterator<E>& o) { return node == o.node && offset == o.offset; }
-        bool operator!=(const Graph_Iterator<E>& o) { return !(*this).operator==(o); }
+        bool operator==(const graph_iterator<G>& o) { return node == o.node && offset == o.offset; }
+        bool operator!=(const graph_iterator<G>& o) { return !(*this).operator==(o); }
         
     private:
-        const Graph<E>& graph;
+        const G& graph;
         node_type node;
         node_type offset;
         

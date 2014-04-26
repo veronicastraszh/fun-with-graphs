@@ -22,11 +22,12 @@ namespace graph {
        COMPUTE DUAL TO A GRAPH
     **/
     
-    template<class E> Graph<E>
-    dual(const Graph<E>& g) 
+    template<class G>
+    G dual(const G& g) 
     {
-        Graph<E> result{};
-        for (E e : g) {
+        using edge_type = typename G::edge_type;
+        G result{};
+        for (edge_type e : g) {
             result += reverse_edge(e);
         }
         return result;
@@ -37,7 +38,7 @@ namespace graph {
        DEPTH FIRST WALK
     **/
     
-    enum class Edge_Type { tree, forward, back, cross };
+    enum class edge_class { tree, forward, back, cross };
     
     /**
        dfw - depth first walk
@@ -60,10 +61,11 @@ namespace graph {
        set directed false to not explore reverse edges.
     **/
     
-    template<class E>
+    template<class G>
     class dfw {
     public:
-        using node_type = typename Graph<E>::node_type;
+        using edge_type = typename G::edge_type;
+        using node_type = typename G::node_type;
         using tick_type = unsigned long;
         const node_type token_node = numeric_limits<node_type>::max();
         const tick_type token_tick = numeric_limits<tick_type>::max();
@@ -73,11 +75,11 @@ namespace graph {
         vector<tick_type> exited;
         function<void(node_type)> pre{[](node_type n) {}};
         function<void(node_type)> post{[](node_type n) {}};
-        function<void(E)> edge{[](E e) {}};
+        function<void(edge_type)> edge{[](edge_type e) {}};
         bool finished{false};
         bool directed{true};
         
-        dfw(const Graph<E>& g) :
+        dfw(const G& g) :
             parents{vector<node_type>(g.node_count(), token_node)},
             entered{vector<tick_type>(g.node_count(), token_tick)},
             exited{vector<tick_type>(g.node_count(), token_tick)} {};
@@ -91,28 +93,28 @@ namespace graph {
         bool entered_before(node_type n, node_type m) const { return entered[n] < entered[m]; }
         bool exited_before(node_type n, node_type m) const { return exited[n] < exited[m]; }
         
-        Edge_Type classify_edge(E e) const;
+        edge_class classify_edge(edge_type e) const;
         
         // main operation
-        void operator()(const Graph<E>& g, node_type n);
+        void operator()(const G& g, node_type n);
         
     private:
         tick_type ticks{0};    
     };
     
     // the main walk
-    template<class E>
-    void dfw<E>::operator()(const Graph<E>& g, node_type n) 
+    template<class G>
+    void dfw<G>::operator()(const G& g, node_type n) 
     {
         if (finished) return;
         mark_discovered(n);
         pre(n);
         for (auto e : g[n]) {
-            if (!discovered(e.target)) {
-                parents[e.target] = n;
+            if (!discovered(e.target())) {
+                parents[e.target()] = n;
                 edge(e);
-                (*this)(g, e.target);
-            } else if (directed || !processed(e.target)) {
+                (*this)(g, e.target());
+            } else if (directed || !processed(e.target())) {
                 edge(e);
             }
             if (finished) return;
@@ -122,13 +124,13 @@ namespace graph {
     }
     
     // edge classification
-    template<class E>
-    Edge_Type dfw<E>::classify_edge(E e) const
+    template<class G>
+    edge_class dfw<G>::classify_edge(typename G::edge_type e) const
     {
-        if (parents[e.target] == e.source) return Edge_Type::tree;
-        if (discovered(e.target) && !processed(e.target)) return Edge_Type::back;
-        if (processed(e.target) && entered_before(e.source, e.target)) return Edge_Type::forward;
-        if (processed(e.target) && entered_before(e.target, e.source)) return Edge_Type::cross;
+        if (parents[e.target()] == e.source()) return edge_class::tree;
+        if (discovered(e.target()) && !processed(e.target())) return edge_class::back;
+        if (processed(e.target()) && entered_before(e.source(), e.target())) return edge_class::forward;
+        if (processed(e.target()) && entered_before(e.target(), e.source())) return edge_class::cross;
         throw logic_error{"Unclassified edge"};    
     }
     
@@ -146,22 +148,24 @@ namespace graph {
     template<class E>
     class cycle_found : public logic_error {
     public:
-        using parents_type = vector<typename E::node_type>;
-        E edge;
+        using edge_type = E;
+        using parents_type = vector<typename edge_type::node_type>;
+        edge_type edge;
         parents_type parents;
-        cycle_found(E e, parents_type p, string s) : logic_error{s}, edge(e), parents{p} {};
+        cycle_found(edge_type e, parents_type p, string s) : logic_error{s}, edge(e), parents{p} {};
     };
     
-    template<class E>
-    vector<typename Graph<E>::node_type> top_sort(const Graph<E>& g)
+    template<class G>
+    vector<typename G::node_type> top_sort(const G& g)
     {
-        using node_type = typename Graph<E>::node_type;
+        using edge_type = typename G::edge_type;
+        using node_type = typename G::node_type;
         vector<node_type> results;
-        dfw<E> walk{g};
+        dfw<G> walk{g};
         walk.post = [&](node_type n) { results.push_back(n); };
-        walk.edge = [&](E e) {
-            if (walk.classify_edge(e) == Edge_Type::back) {
-                throw cycle_found<E>{e, walk.parents, "Cycle found"};
+        walk.edge = [&](edge_type e) {
+            if (walk.classify_edge(e) == edge_class::back) {
+                throw cycle_found<edge_type>{e, walk.parents, "Cycle found"};
             }
         };
         for (node_type n = 0; n < g.node_count(); n++) {
@@ -185,14 +189,14 @@ namespace graph {
        d is the dual of the graph, computed using dual(g)
     **/
     
-    template<class E>
-    vector<vector<typename Graph<E>::node_type>> scc(const Graph<E>& g, const Graph<E>& d)
+    template<class G>
+    vector<vector<typename G::node_type>> scc(const G& g, const G& d)
     {
-        using node_type = typename Graph<E>::node_type;
+        using node_type = typename G::node_type;
         
         // find completion times in primary graph
         vector<node_type> finish_times;
-        dfw<E> walk1{g};
+        dfw<G> walk1{g};
         walk1.post = [&](int node) { finish_times.push_back(node); };
         for (node_type n = 0; n < g.node_count(); n++) {
             if (!walk1.processed(n)) walk1(g,n);
@@ -201,7 +205,7 @@ namespace graph {
         // collect components in dual graph
         vector<vector<node_type>> result;
         vector<node_type> current;
-        dfw<E> walk2{d};
+        dfw<G> walk2{d};
         walk2.pre = [&](int node) { current.push_back(node); };
         for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
             if (!walk2.processed(*n)) {
@@ -232,9 +236,9 @@ namespace graph {
        source_node to n. The edge {parents(parents(n)), parents(n)} is
        likewise the second to last.
        
-       E is the edge type, which must include a field named
-       'weight'. That weight must be an unsigned type. (Dijkstra has
-       unspecified behavior for negative edge weights.)
+       G::edge_type must include a field named 'weight()'. That weight
+       must be an unsigned type. (Dijkstra has unspecified behavior
+       for negative edge weights.)
        
        H is a heap class, as provided in heaps.h.
 
@@ -242,14 +246,16 @@ namespace graph {
        
     **/
     
-    template<class E, template<class,class> class H>
-    pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type> >
-    dijkstra(const Graph<E>& g,
-             typename Graph<E>::node_type source_node,
-             typename E::weight_type max_edge_cost)
-    {    
-        using node_type = typename Graph<E>::node_type;
-        using weight_type = typename E::weight_type;
+    template<class G, template<class,class> class H>
+    pair<vector<typename G::edge_type::weight_type>,
+         vector<typename G::node_type> >
+    dijkstra(const G& g,
+             typename G::node_type source_node,
+             typename G::edge_type::weight_type max_edge_cost)
+    {
+        using edge_type = typename G::edge_type;
+        using node_type = typename G::node_type;
+        using weight_type = typename edge_type::weight_type;
 
         vector<weight_type> costs(g.node_count(), numeric_limits<weight_type>::max());
         vector<node_type> parents(g.node_count(), numeric_limits<node_type>::max());
@@ -267,17 +273,17 @@ namespace graph {
             node_type node = heap.find_min();
             heap.delete_min();
             for (auto edge : g[node]) {
-                weight_type this_cost = costs[node] + edge.weight;
-                if (costs[edge.target] == numeric_limits<weight_type>::max()) {
+                weight_type this_cost = costs[node] + edge.weight();
+                if (costs[edge.target()] == numeric_limits<weight_type>::max()) {
                     // new entry
-                    costs[edge.target] = this_cost;
-                    parents[edge.target] = node;
-                    locations[edge.target] = heap.insert(this_cost, edge.target);
-                } else if (this_cost < costs[edge.target]) {
+                    costs[edge.target()] = this_cost;
+                    parents[edge.target()] = node;
+                    locations[edge.target()] = heap.insert(this_cost, edge.target());
+                } else if (this_cost < costs[edge.target()]) {
                     // existing entry improved
-                    parents[edge.target] = node;
-                    heap.decrease_key(locations[edge.target], costs[edge.target], this_cost);
-                    costs[edge.target] = this_cost;
+                    parents[edge.target()] = node;
+                    heap.decrease_key(locations[edge.target()], costs[edge.target()], this_cost);
+                    costs[edge.target()] = this_cost;
                 }
             }
         }
@@ -290,17 +296,19 @@ namespace graph {
        As above, but computes the max_edge_cost.
     **/
     
-    template<class E, template<class,class> class H>
-    pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type> >
-    dijkstra(const Graph<E>& g,
-             typename Graph<E>::node_type source_node)
+    template<class G, template<class,class> class H>
+    pair<vector<typename G::edge_type::weight_type>,
+         vector<typename G::node_type> >
+    dijkstra(const G& g,
+             typename G::node_type source_node)
     {
-        using weight_type = typename E::weight_type;
+        using edge_type = typename G::edge_type;
+        using weight_type = typename edge_type::weight_type;
         weight_type max_edge_cost = 0;
         for (auto e : g) {
-            if (e.weight > max_edge_cost) max_edge_cost = e.weight;
+            if (e.weight() > max_edge_cost) max_edge_cost = e.weight();
         }
-        return dijkstra<E,H>(g, source_node, max_edge_cost);
+        return dijkstra<G,H>(g, source_node, max_edge_cost);
     }
 
     /**
@@ -310,7 +318,8 @@ namespace graph {
        provided no negative cycles are present. (Negative cycles are
        detected, however.)
 
-       This runs in O(n*m) worst case.
+       Note, this algorithm is essentially Bellman-Ford, but with
+       better average case performance. It runs in O(n*m) worst case.
      **/
 
     template<class N>
@@ -321,13 +330,15 @@ namespace graph {
         negative_cycle_found(N n, vector<N> p, string s) : logic_error{s}, node{n}, parents{p} {};
     };
     
-    template<class E>
-    pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type> >
-    q_lc(const Graph<E>& g,
-         typename Graph<E>::node_type source_node)
+    template<class G>
+    pair<vector<typename G::edge_type::weight_type>,
+         vector<typename G::node_type> >
+    q_lc(const G& g,
+         typename G::node_type source_node)
     {
-        using node_type = typename Graph<E>::node_type;
-        using weight_type = typename E::weight_type;
+        using edge_type = typename G::edge_type;
+        using node_type = typename G::node_type;
+        using weight_type = typename edge_type::weight_type;
 
         vector<weight_type> costs(g.node_count(), numeric_limits<weight_type>::max());
         vector<node_type> parents(g.node_count(), numeric_limits<node_type>::max());
@@ -344,20 +355,23 @@ namespace graph {
         in_q[source_node] = true;
         
         while(!q.empty()) {
-            node_type n = q.front(); q.pop(); in_q[n] = false;
+            node_type n = q.front();
+            q.pop();
+            in_q[n] = false;
             if (++counts[n] >= g.node_count()) {
                 throw negative_cycle_found<node_type>{n, parents, "Negative cycle found"};
             }
             for (auto e : g[n]) {
-                weight_type candidate_cost = costs[n] + e.weight;
+                weight_type candidate_cost = costs[n] + e.weight();
                 // if this edge is better, use that
-                if (costs[e.target] > candidate_cost) {
-                    costs[e.target] = candidate_cost;
-                    parents[e.target] = n;
-                    // e.target has improved; perhaps its children
+                if (costs[e.target()] > candidate_cost) {
+                    costs[e.target()] = candidate_cost;
+                    parents[e.target()] = n;
+                    // e.target() has improved; perhaps its children
                     // will improve, so recheck
-                    if (!in_q[e.target]) {
-                        q.push(e.target); in_q[e.target] = true;
+                    if (!in_q[e.target()]) {
+                        q.push(e.target());
+                        in_q[e.target()] = true;
                     }
                 }
             }
@@ -380,13 +394,15 @@ namespace graph {
        performance on sparse graphs.
      **/
 
-    template<class E>
-    pair<vector<typename E::weight_type>,vector<typename Graph<E>::node_type> >
-    dq_lc(const Graph<E>& g,
-          typename Graph<E>::node_type source_node)
+    template<class G>
+    pair<vector<typename G::edge_type::weight_type>,
+         vector<typename G::node_type> >
+    dq_lc(const G& g,
+          typename G::node_type source_node)
     {
-        using node_type = typename Graph<E>::node_type;
-        using weight_type = typename E::weight_type;
+        using edge_type = typename G::edge_type;
+        using node_type = typename G::node_type;
+        using weight_type = typename edge_type::weight_type;
 
         vector<weight_type> costs(g.node_count(), numeric_limits<weight_type>::max());
         vector<node_type> parents(g.node_count(), numeric_limits<node_type>::max());
@@ -404,22 +420,27 @@ namespace graph {
         seen[source_node] = true;
         
         while(!dq.empty()) {
-            node_type n = dq.front(); dq.pop_front(); in_dq[n] = false;
+            node_type n = dq.front();
+            dq.pop_front();
+            in_dq[n] = false;
             for (auto e : g[n]) {
-                weight_type candidate_cost = costs[n] + e.weight;
+                weight_type candidate_cost = costs[n] + e.weight();
                 // if this edge is better, use that
-                if (costs[e.target] > candidate_cost) {
-                    costs[e.target] = candidate_cost;
-                    parents[e.target] = n;
-                    // e.target has improved, so recheck its children
-                    if (!in_dq[e.target]) {
-                        if (seen[e.target]) {
+                if (costs[e.target()] > candidate_cost) {
+                    costs[e.target()] = candidate_cost;
+                    parents[e.target()] = n;
+                    // e.target() has improved, so recheck its children
+                    if (!in_dq[e.target()]) {
+                        if (seen[e.target()]) {
                             // nodes we have already seen go up front,
                             // as their children are likely in-queue
-                            dq.push_front(e.target); in_dq[e.target] = true;
+                            dq.push_front(e.target());
+                            in_dq[e.target()] = true;
                         } else {
                             // new nodes can wait
-                            dq.push_back(e.target); in_dq[e.target] = true; seen[e.target] = true;
+                            dq.push_back(e.target());
+                            in_dq[e.target()] = true;
+                            seen[e.target()] = true;
                         }
                     }
                 }

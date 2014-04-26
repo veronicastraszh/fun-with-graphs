@@ -17,7 +17,7 @@ shortest_path: shortest_path.o
 walks: walks.o
 	$(CPP) $(CPPOPTS) -o $@ $< -L .. -lfungraphs
 
-%.o: %.cpp edge.h graph.h graph_algo.h heaps.h random_graph.h graph_utils.h
+%.o: %.cpp edge.h graph.h graph_algo.h heaps.h graph_utils.h
 	$(CPP) -c $(CPPOPTS) -I ../include -o $@ $<
 
 clean:

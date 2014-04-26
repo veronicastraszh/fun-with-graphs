@@ -109,6 +109,8 @@ namespace graph {
         
         template<class K, class T>
         typename dial_heap<K,T>::location_type dial_heap<K,T>::insert(key_type k, value_type t) {
+            if (k < base) throw out_of_range{"dial heap, key too small"};
+            if (k >= base+buckets.size()) throw out_of_range{"dial_heap, key to large"};
             bucket_index_type index = get_index(k);
             buckets[index].push_front(t);
             count++;
@@ -119,6 +121,8 @@ namespace graph {
         void dial_heap<K,T>::decrease_key(location_type loc,
                                           key_type old_k,
                                           key_type new_k) {
+            if (new_k < base) throw out_of_range{"dial heap, key decreased too low"};
+            if (new_k > old_k) throw out_of_range{"dial heap, attempted key increase"};
             bucket_index_type old_index = get_index(old_k);
             bucket_index_type new_index = get_index(new_k);
             buckets[new_index].splice(buckets[new_index].begin(), buckets[old_index], loc);
@@ -236,6 +240,8 @@ namespace graph {
         
         template<class K, class T>
         typename radix_heap<K,T>::location_type radix_heap<K,T>::insert(key_type k, value_type t) {
+            if (k < ranges.front()) throw out_of_range{"radix heap, key too small"};
+            if (k > ranges.back()) throw out_of_range{"radix heap, key too large"};
             bucket_index_type bucket = find_bucket(k);
             buckets[bucket].push_front(make_pair(k,t));
             count++;
@@ -246,6 +252,8 @@ namespace graph {
         void radix_heap<K,T>::decrease_key(location_type loc,
                                            key_type old_k,
                                            key_type new_k) {
+            if (new_k < ranges.front()) throw out_of_range{"radix heap, decrease key too low"};
+            if (new_k > old_k) throw out_of_range{"radix heap, attempted to increase key"};
             loc->first = new_k;
             bucket_index_type old_bucket = find_bucket(old_k);
             bucket_index_type new_bucket = find_bucket(new_k);

@@ -6,7 +6,7 @@
 
 using namespace std;
 using namespace graph;
-using namespace graph::heaps;
+using namespace heaps;
 
 template<class T, class J>
 void print_results(pair<vector<T>, vector<J>> results) {
@@ -15,17 +15,19 @@ void print_results(pair<vector<T>, vector<J>> results) {
   }
 }
 
-Graph<Weighted_Edge> positive_graph {{0,1,2},{0,2,8},
-                                     {1,2,5},{1,3,3},
-                                     {2,1,6},{2,4,0},
-                                     {3,2,1},{3,4,7},{3,5,6},
-                                     {4,3,4},
-                                     {5,4,2}};
+using positive_graph_type = graph<weighted_edge<> >;
+
+positive_graph_type positive_graph {{0,1,2},{0,2,8},
+                                    {1,2,5},{1,3,3},
+                                    {2,1,6},{2,4,0},
+                                    {3,2,1},{3,4,7},{3,5,6},
+                                    {4,3,4},
+                                    {5,4,2}};
 
 void test_dijkstra()
 {
-   auto dial_results = dijkstra<Weighted_Edge, dial_heap>(positive_graph, 0);
-   auto radix_results = dijkstra<Weighted_Edge, radix_heap>(positive_graph, 0);
+   auto dial_results = dijkstra<positive_graph_type, dial_heap>(positive_graph, 0);
+   auto radix_results = dijkstra<positive_graph_type, radix_heap>(positive_graph, 0);
    // TODO actually verify content
    if (dial_results != radix_results) {
      cout << "Dijkstra failed\nGraphs did not match\n";
@@ -42,9 +44,9 @@ void test_dijkstra()
 
 void test_lc()
 {
-    auto dial_results = dijkstra<Weighted_Edge, dial_heap>(positive_graph, 0);
-    auto q_lc_results = q_lc<Weighted_Edge>(positive_graph, 0);
-    auto dq_lc_results = dq_lc<Weighted_Edge>(positive_graph, 0);
+    auto dial_results = dijkstra<positive_graph_type, dial_heap>(positive_graph, 0);
+    auto q_lc_results = q_lc(positive_graph, 0);
+    auto dq_lc_results = dq_lc(positive_graph, 0);
     if (dial_results != q_lc_results) {
         cout << "q_lc returned bad results\n";
         print_graph(positive_graph);

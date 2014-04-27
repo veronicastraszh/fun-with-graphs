@@ -21,6 +21,12 @@ namespace graph {
     /**
        COMPUTE DUAL TO A GRAPH
     **/
+
+    /**
+       dual - the dual of the graph
+
+       This is stimple g with the directions of the edges reversed
+    **/
     
     template<class G>
     G dual(const G& g) 

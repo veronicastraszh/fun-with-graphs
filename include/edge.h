@@ -4,6 +4,7 @@
 #ifndef EDGE_MAIN_H
 #define EDGE_MAIN_H 1
 
+#include<string>
 #include<iostream>
 
 using namespace std;
@@ -23,15 +24,17 @@ namespace graph {
         edge(node_type source, node_type target) : s{source}, t{target} {}
         node_type source() const { return s; };
         node_type target() const { return t; };
+
+        operator string() const { return "{" + to_string(s) + "," + to_string(t) + "}"; }
     private:
         node_type s;
         node_type t;
     };
 
-    template<class T>
+    template<class T=unsigned int>
     ostream& operator<<(ostream& os, edge<T> e)
     {
-        return os << '{' << e.source() << ',' << e.target() << '}';
+        return os << string(e);
     }
 
     template<class T>
@@ -66,6 +69,8 @@ namespace graph {
         node_type target() const { return t; };
         weight_type& weight() { return w; };
         weight_type weight() const { return w; };
+
+        operator string() const { return "{" + to_string(s) + "," + to_string(t) + "}(" + to_string(w) + ")"; }
     private:
         node_type s;
         node_type t;
@@ -76,7 +81,7 @@ namespace graph {
     template<class W=unsigned long, class T=unsigned int>
     ostream& operator<<(ostream& os, weighted_edge<W,T> e)
     {
-        return os << '{' << e.source() << ',' << e.target() << "}(" << e.weight() << ")";
+        return os << string(e);
     }
     
     template<class W=unsigned long, class T=unsigned int>

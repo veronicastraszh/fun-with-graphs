@@ -1,8 +1,11 @@
 #include <string>
 #include <algorithm>
+#include <string>
+#include <iostream>
 
 #include "graph.h"
-#include "graph_algo.h"
+#include "edge.h"
+#include "walks.h"
 
 #include "graph_utils.h"
 

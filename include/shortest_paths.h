@@ -58,7 +58,7 @@ namespace graph {
         // a heap to track the best next-node
         H<weight_type, node_type> heap(g.node_count(), max_edge_cost);
 
-        // here we track each objects location in the heap
+        // here we track each object's location in the heap
         vector<typename decltype(heap)::location_type> locations(g.node_count());
 
         costs[source_node] = 0;

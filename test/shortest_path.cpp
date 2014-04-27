@@ -1,7 +1,10 @@
-#include<tuple>
+#include <tuple>
+#include <string>
+#include <iostream>
 
 #include "graph.h"
-#include "graph_algo.h"
+#include "edge.h"
+#include "shortest_paths.h"
 #include "heaps.h"
 
 #include "graph_utils.h"

@@ -93,9 +93,32 @@ namespace graph {
         edges_n += 1;
         return *this;
     }
+
+
+    /**
+       COMPUTE DUAL TO A GRAPH
+    **/
+
+    /**
+       dual - the dual of the graph
+
+       This is stimple g with the directions of the edges reversed
+    **/
     
+    template<class G>
+    G dual(const G& g) 
+    {
+        using edge_type = typename G::edge_type;
+        G result{};
+        for (edge_type e : g) {
+            result += reverse_edge(e);
+        }
+        return result;
+    }
     
-    // A graph iterator
+    /**
+       GRAPH ITERATOR
+    **/
     
     template<class G>
     class graph_iterator {

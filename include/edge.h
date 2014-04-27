@@ -58,7 +58,7 @@ namespace graph {
     **/
 
     template<class W=unsigned long, class T=unsigned int>
-    struct weighted_edge {
+    class weighted_edge {
     public:
         using node_type = T;
         using weight_type = W;

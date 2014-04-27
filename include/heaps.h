@@ -108,7 +108,9 @@ namespace graph {
         };
         
         template<class K, class T>
-        typename dial_heap<K,T>::location_type dial_heap<K,T>::insert(key_type k, value_type t) {
+        typename dial_heap<K,T>::location_type
+        dial_heap<K,T>::insert(key_type k, value_type t)
+        {
             if (k < base) throw out_of_range{"dial heap, key too small"};
             if (k >= base+buckets.size()) throw out_of_range{"dial_heap, key to large"};
             bucket_index_type index = get_index(k);
@@ -120,7 +122,8 @@ namespace graph {
         template<class K, class T>
         void dial_heap<K,T>::decrease_key(location_type loc,
                                           key_type old_k,
-                                          key_type new_k) {
+                                          key_type new_k)
+        {
             if (new_k < base) throw out_of_range{"dial heap, key decreased too low"};
             if (new_k > old_k) throw out_of_range{"dial heap, attempted key increase"};
             bucket_index_type old_index = get_index(old_k);
@@ -129,7 +132,8 @@ namespace graph {
         }
         
         template<class K, class T>
-        void dial_heap<K,T>::rebase() {
+        void dial_heap<K,T>::rebase()
+        {
             for(key_type c = 0; c < buckets.size(); c++) {
                 bucket_index_type i = get_index(base + c);
                 if (!buckets[i].empty()) {
@@ -141,13 +145,15 @@ namespace graph {
         }
         
         template<class K, class T>
-        typename dial_heap<K,T>::value_type dial_heap<K,T>::find_min() {
+        typename dial_heap<K,T>::value_type dial_heap<K,T>::find_min()
+        {
             rebase();
             return buckets[base].front();
         }
         
         template<class K, class T>
-        void dial_heap<K,T>::delete_min() {
+        void dial_heap<K,T>::delete_min()
+        {
             buckets[base].pop_front();
             count -= 1;
         }
@@ -191,7 +197,9 @@ namespace graph {
         };
         
         template<class K, class T>
-        radix_heap<K,T>::radix_heap(size_type nodes, size_type max_weight) : buckets{}, ranges{}, count{0} {
+        radix_heap<K,T>::radix_heap(size_type nodes, size_type max_weight) :
+            buckets{}, ranges{}, count{0}
+        {
             size_type size = nodes * max_weight;
             size_type depth = 2;
             size_type t_size = size;
@@ -204,7 +212,8 @@ namespace graph {
         
         template<class K, class T>
         typename radix_heap<K,T>::bucket_index_type
-        radix_heap<K,T>::find_bucket(key_type e) {
+        radix_heap<K,T>::find_bucket(key_type e)
+        {
             for (bucket_index_type i = 0; i < ranges.size(); i++) {
                 if (ranges[i] >= e) return i;
             }
@@ -212,7 +221,8 @@ namespace graph {
         }
         
         template<class K, class T>
-        void radix_heap<K,T>::new_ranges(key_type start, key_type end) {
+        void radix_heap<K,T>::new_ranges(key_type start, key_type end)
+        {
             ranges[0] = start;
             key_type i = start;
             bucket_index_type width = 1;
@@ -231,7 +241,8 @@ namespace graph {
         
         template<class K, class T>
         typename radix_heap<K,T>::bucket_index_type
-        radix_heap<K,T>::first_occupied() {
+        radix_heap<K,T>::first_occupied()
+        {
             for (bucket_index_type i = 0; i < buckets.size(); i++) {
                 if (!buckets[i].empty()) return i;
             }
@@ -239,7 +250,9 @@ namespace graph {
         }
         
         template<class K, class T>
-        typename radix_heap<K,T>::location_type radix_heap<K,T>::insert(key_type k, value_type t) {
+        typename radix_heap<K,T>::location_type
+        radix_heap<K,T>::insert(key_type k, value_type t)
+        {
             if (k < ranges.front()) throw out_of_range{"radix heap, key too small"};
             if (k > ranges.back()) throw out_of_range{"radix heap, key too large"};
             bucket_index_type bucket = find_bucket(k);
@@ -251,7 +264,8 @@ namespace graph {
         template<class K, class T>
         void radix_heap<K,T>::decrease_key(location_type loc,
                                            key_type old_k,
-                                           key_type new_k) {
+                                           key_type new_k)
+        {
             if (new_k < ranges.front()) throw out_of_range{"radix heap, decrease key too low"};
             if (new_k > old_k) throw out_of_range{"radix heap, attempted to increase key"};
             loc->first = new_k;
@@ -263,7 +277,9 @@ namespace graph {
         }
         
         template<class K, class T>
-        typename radix_heap<K,T>::value_type radix_heap<K,T>::find_min() {
+        typename radix_heap<K,T>::value_type
+        radix_heap<K,T>::find_min()
+        {
             bucket_index_type f = first_occupied();
             if (f >= 2) {
                 // reshuffle elements to get minimum up front
@@ -284,7 +300,8 @@ namespace graph {
         }
         
         template<class K, class T>
-        void radix_heap<K,T>::delete_min() {
+        void radix_heap<K,T>::delete_min()
+        {
             bucket_index_type f = first_occupied();
             buckets[f].pop_front();
             count -= 1;

@@ -72,21 +72,23 @@ int main()
     auto f_dijkstra_dial = [](const positive_graph_type& g, positive_graph_type::node_type n) {
         return dijkstra<positive_graph_type,dial_heap>(g,n);
     };
-    verify_graph("Dijkstra (dial)", positive_graph, f_dijkstra_dial);
-                                                                     
     auto f_dijkstra_radix = [](const positive_graph_type& g, positive_graph_type::node_type n) {
         return dijkstra<positive_graph_type,radix_heap>(g,n);
     };
-    verify_graph("Dijkstra (radix)", positive_graph, f_dijkstra_radix);
-
+    auto f_dijkstra_pairing = [](const positive_graph_type& g, positive_graph_type::node_type n) {
+        return dijkstra<positive_graph_type,pairing_heap>(g,n);
+    };
     auto f_q_lc = [](const positive_graph_type& g, positive_graph_type::node_type n) {
         return q_lc(g,n);
     };
-    verify_graph("Queued label correcting", positive_graph, f_q_lc);
-    
     auto f_dq_lc = [](const positive_graph_type& g, positive_graph_type::node_type n) {
         return dq_lc(g,n);
     };
+
+    verify_graph("Dijkstra (dial)", positive_graph, f_dijkstra_dial);
+    verify_graph("Dijkstra (radix)", positive_graph, f_dijkstra_radix);
+    verify_graph("Dijkstra (pairing)", positive_graph, f_dijkstra_pairing);
+    verify_graph("Queued label correcting", positive_graph, f_q_lc);
     verify_graph("Deque label correcting", positive_graph, f_dq_lc);
 
     // TODO test with negative paths and negative cycles

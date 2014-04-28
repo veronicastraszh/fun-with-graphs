@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <utility>
 #include <limits>
+#include <algorithm>
 
 using namespace std;
 
@@ -17,6 +18,11 @@ namespace graph {
     namespace heaps {
         
         /**
+           INTEGRAL HEAPS
+
+           (Note, for graphs with fractional/real-valued edge weights,
+           see the pairing heap below.)
+           
            These heaps are designed to work with the Dijkstra shortest
            path algoritm, and thus can follow certain constraints, namely
            these:
@@ -307,6 +313,128 @@ namespace graph {
             count -= 1;
         }
         
+    }
+
+    /**
+       PAIRING HEAP
+    **/
+
+    namespace pairing_heap_support {
+
+        template<class K, class V>
+        class pairing_heap_element {
+        public:
+            pairing_heap_element(K key, V value) : k{key}, v{value} {}
+            K k;
+            V v;
+            pairing_heap_element* p{nullptr};
+            list<pairing_heap_element> c;
+        };
+    }
+    
+    using namespace pairing_heap_support;        
+
+    template <class K, class V>
+    class pairing_heap {
+    public:
+
+        using key_type = K;
+        using value_type = V;
+        using size_type = key_type;
+        using element_type = pairing_heap_element<K,V>;
+        using list_type = list<element_type>;
+        using location_type = typename list_type::iterator;
+        
+        pairing_heap(size_type, size_type) {}
+        
+        location_type insert(key_type k, value_type t);
+        void decrease_key(location_type loc, key_type old_k, key_type new_k);
+        
+        value_type find_min();
+        void delete_min(); // must follow call to find_min();
+        size_type size() const { return count; }
+        bool empty() const { return count == 0; }
+
+    private:
+        list_type root;
+        size_type count{0};
+
+        void link(location_type first, location_type second);
+        void merge_root();
+    };
+
+    template<class K, class V>
+    void pairing_heap<K,V>::link(location_type first, location_type second)
+    {
+        if(first->k < second->k) {
+            first->c.splice(first->c.begin(), root, second);
+            second->p = &*first;
+        } else {
+            second->c.splice(second->c.begin(), root, first);
+            first->p = &*second;
+        }
+    }
+
+    template<class K, class V>
+    void pairing_heap<K,V>::merge_root()
+    {
+        location_type l = root.begin();
+        while (l != root.end()) {
+            location_type f = l;
+            ++l;
+            if (l != root.end()) {
+                location_type s = l;
+                ++l;
+                link(f,s);
+            }
+        }
+        while (root.size() > 1) {
+            location_type s = root.begin();
+            ++s;
+            link(root.begin(), s);
+        }
+    }
+
+    template<class K, class V>
+    typename list<pairing_heap_element<K,V> >::iterator
+    pairing_heap<K,V>::insert(K key, V value)
+    {
+        element_type n{key, value};
+        root.push_front(n);
+        location_type r = root.begin();
+        merge_root();
+        count += 1;
+        return r;
+    }
+
+    template<class K, class V>
+    void pairing_heap<K,V>::decrease_key(location_type loc, key_type old_k, key_type new_k)
+    {
+        loc->k = new_k;
+        if (loc->p != nullptr) {
+            if (loc->k < loc->p->k) {
+                root.splice(root.end(), loc->p->c, loc);
+                loc->p = nullptr;
+                merge_root();
+            }
+        }
+    }
+
+    template<class K, class V>
+    V pairing_heap<K,V>::find_min()
+    {
+        if (root.size() == 0) throw out_of_range{"Pairing heap empty"};
+        return root.front().v;
+    }
+
+    template<class K, class V>
+    void pairing_heap<K,V>::delete_min()
+    {
+        if (root.size() != 1) throw out_of_range{"Can't delete_min"};
+        swap(root,root.front().c);
+        count -= 1;
+        for_each(root.begin(), root.end(), [](element_type e) { e.p = nullptr; });
+        merge_root();
     }
     
 }

@@ -89,12 +89,10 @@ namespace graph {
             using bucket_index_type = typename vector<bucket_type>::size_type;
             using location_type = typename bucket_type::iterator;
             
-            dial_heap(size_type nodes, size_type max_weight) :
+            dial_heap(size_type, size_type max_weight) :
                 buckets{vector<bucket_type>(max_weight + 1)},
                 base{0},
-                count{0} {
-#pragma unused(nodes)
-                }
+                count{0} { }
             
             location_type insert(key_type k, value_type t);
             void decrease_key(location_type loc, key_type old_k, key_type new_k);
@@ -318,6 +316,12 @@ namespace graph {
     /**
        PAIRING HEAP
     **/
+
+    /**
+       A pairing heap is believed to have amortized performance
+       similar to Fibonacci heap, but with better constant time
+       performance. Plus it is much easier to implement.
+     **/
 
     namespace pairing_heap_support {
 

@@ -41,18 +41,18 @@ positive_graph_type positive_graph {{0,1,2},{0,2,8},
                                     {4,3,4},
                                     {5,4,2}};
 
-template<template<class,class> class H>
-void test_dijkstra()
+template<class G, class S>
+void verify_graph(string name, const G& g, const S& fun)
 {
-    vector<positive_graph_type::edge_type::weight_type> weights;
-    vector<positive_graph_type::node_type> parents;
-    tie (weights, parents) = dijkstra<positive_graph_type, H>(positive_graph, 0);
+    vector<typename G::edge_type::weight_type> weights;
+    vector<typename G::node_type> parents;
+    tie (weights, parents) = fun(positive_graph, 0);
     bool success;
     string message;
-    tie(success, message) = verify_shortest_paths(positive_graph, weights, parents);
+    tie(success, message) = verify_shortest_paths(g, weights, parents);
 
     if (!success) {
-        cout << "Dijkstra failed\n";
+        cout << name << " failed\n";
         print_graph(positive_graph);
         cout << "Weights ";
         for (auto w : weights) cout << w << ' ';
@@ -63,61 +63,31 @@ void test_dijkstra()
         cout << message << '\n';
         exit(1);
     }
-    cout << "Dijkstra passed\n";
-}
-
-void test_q_lc()
-{
-    vector<positive_graph_type::edge_type::weight_type> weights;
-    vector<positive_graph_type::node_type> parents;
-    tie (weights, parents) = q_lc(positive_graph, 0);
-    bool success;
-    string message;
-    tie(success, message) = verify_shortest_paths(positive_graph, weights, parents);
-    if (!success) {
-        cout << "Queued label correcting algorithm failed\n";
-        print_graph(positive_graph);
-        cout << "Weights ";
-        for (auto w : weights) cout << w << ' ';
-        cout << '\n';
-        cout << "Parents ";
-        for (auto p : parents) cout << p << ' ';
-        cout << '\n';
-        cout << message << '\n';
-        exit(1);
-    }
-    cout << "Queued label correcting algorithm passed\n";
-}
-
-void test_dq_lc()
-{
-    vector<positive_graph_type::edge_type::weight_type> weights;
-    vector<positive_graph_type::node_type> parents;
-    tie (weights, parents) = dq_lc(positive_graph, 0);
-    bool success;
-    string message;
-    tie(success, message) = verify_shortest_paths(positive_graph, weights, parents);
-    if (!success) {
-        cout << "Deque label correcting algorithm failed\n";
-        print_graph(positive_graph);
-        cout << "Weights ";
-        for (auto w : weights) cout << w << ' ';
-        cout << '\n';
-        cout << "Parents ";
-        for (auto p : parents) cout << p << ' ';
-        cout << '\n';
-        cout << message << '\n';
-        exit(1);
-    }
-    cout << "Deque label correcting algorithm passed\n";
+    cout << name << " passed\n";
 }
 
 int main()
 {
     cout << "Testing shortest path algorithms\n";
-    test_dijkstra<dial_heap>();
-    test_dijkstra<radix_heap>();
-    test_q_lc();
-    test_dq_lc();
+    auto f_dijkstra_dial = [](const positive_graph_type& g, positive_graph_type::node_type n) {
+        return dijkstra<positive_graph_type,dial_heap>(g,n);
+    };
+    verify_graph("Dijkstra (dial)", positive_graph, f_dijkstra_dial);
+                                                                     
+    auto f_dijkstra_radix = [](const positive_graph_type& g, positive_graph_type::node_type n) {
+        return dijkstra<positive_graph_type,radix_heap>(g,n);
+    };
+    verify_graph("Dijkstra (radix)", positive_graph, f_dijkstra_radix);
+
+    auto f_q_lc = [](const positive_graph_type& g, positive_graph_type::node_type n) {
+        return q_lc(g,n);
+    };
+    verify_graph("Queued label correcting", positive_graph, f_q_lc);
+    
+    auto f_dq_lc = [](const positive_graph_type& g, positive_graph_type::node_type n) {
+        return dq_lc(g,n);
+    };
+    verify_graph("Deque label correcting", positive_graph, f_dq_lc);
+
     // TODO test with negative paths and negative cycles
 }

@@ -32,28 +32,19 @@ pair<bool, string> verify_shortest_paths(const G& g,
     return make_pair(true, "");
 }
 
-using positive_graph_type = graph<weighted_edge<> >;
-
-positive_graph_type positive_graph {{0,1,2},{0,2,8},
-                                    {1,2,5},{1,3,3},
-                                    {2,1,6},{2,4,0},
-                                    {3,2,1},{3,4,7},{3,5,6},
-                                    {4,3,4},
-                                    {5,4,2}};
-
 template<class G, class S>
 void verify_graph(string name, const G& g, const S& fun)
 {
     vector<typename G::edge_type::weight_type> weights;
     vector<typename G::node_type> parents;
-    tie (weights, parents) = fun(positive_graph, 0);
+    tie (weights, parents) = fun(g, 0);
     bool success;
     string message;
     tie(success, message) = verify_shortest_paths(g, weights, parents);
 
     if (!success) {
         cout << name << " failed\n";
-        print_graph(positive_graph);
+        print_graph(g);
         cout << "Weights ";
         for (auto w : weights) cout << w << ' ';
         cout << '\n';
@@ -65,6 +56,15 @@ void verify_graph(string name, const G& g, const S& fun)
     }
     cout << name << " passed\n";
 }
+
+using positive_graph_type = graph<weighted_edge<> >;
+
+positive_graph_type positive_graph {{0,1,2},{0,2,8},
+                                    {1,2,5},{1,3,3},
+                                    {2,1,6},{2,4,0},
+                                    {3,2,1},{3,4,7},{3,5,6},
+                                    {4,3,4},
+                                    {5,4,2}};
 
 int main()
 {

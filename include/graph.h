@@ -37,30 +37,9 @@ namespace graph {
         using node_type = typename E::node_type;
         
         graph() {};
-        graph(const graph<edge_type>& g)
-        {
-            for (auto e : g) operator+=(e);
-        }
-        graph(graph<edge_type>&& g)
-        {
-            swap(edges, g.edges);
-            swap(edges_n, g.edges_n);
-        }
         graph(initializer_list<edge_type> es)
         {
             for (auto e : es) operator+=(e);
-        }
-        void operator=(const graph<edge_type>& g)
-        {
-            edges = g.edges;
-            edges_n = g.edges_n;
-        }
-        void operator=(const graph<edge_type>&& g)
-        {
-            edges = vector<vector<edge_type>>(0);
-            edges_n = 0;
-            swap(edges, g.edges);
-            swap(edges_n, g.edges_n);
         }
     
         node_type node_count() const { return static_cast<node_type>(edges.size()); }

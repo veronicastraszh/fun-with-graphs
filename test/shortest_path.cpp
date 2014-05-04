@@ -79,6 +79,16 @@ positive_graph_type positive_graph {{0,1,2},{0,2,8},
                                     {4,3,4},
                                     {5,4,2}};
 
+using fractional_graph_type = graph<weighted_edge<double> >;
+
+fractional_graph_type fractional_graph {{0,1,2.4},{0,2,8.7},
+                                        {1,2,5.2},{1,3,3.6},
+                                        {2,1,6.666},{2,4,0},
+                                        {3,2,1.9},{3,4,7.0002},{3,5,6.5},
+                                        {4,3,4.1},
+                                        {5,4,2.4}};
+
+
 using negative_graph_type = graph<weighted_edge<long> >;
 
 negative_graph_type negative_graph {{1,2,10},{1,3,15},
@@ -108,6 +118,9 @@ int main()
     auto f_dijkstra_pairing = [](const positive_graph_type& g, positive_graph_type::node_type n) {
         return dijkstra<positive_graph_type,pairing_heap>(g,n);
     };
+    auto f_dijkstra_pairing_f = [](const fractional_graph_type& g, fractional_graph_type::node_type n) {
+        return dijkstra<fractional_graph_type,pairing_heap>(g,n);
+    };
     auto f_q_lc = [](const positive_graph_type& g, positive_graph_type::node_type n) {
         return q_lc(g,n);
     };
@@ -124,6 +137,7 @@ int main()
     verify_graph("Dijkstra (dial)", positive_graph, f_dijkstra_dial);
     verify_graph("Dijkstra (radix)", positive_graph, f_dijkstra_radix);
     verify_graph("Dijkstra (pairing)", positive_graph, f_dijkstra_pairing);
+    verify_graph("Dijkstra (pairing), fractional", fractional_graph, f_dijkstra_pairing_f);
     verify_graph("Queued label correcting", positive_graph, f_q_lc);
     verify_graph("Deque label correcting", positive_graph, f_dq_lc);
     verify_graph("Queued label correcting, negative", negative_graph, f_q_lc_n);

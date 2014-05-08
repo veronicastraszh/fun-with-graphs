@@ -5,11 +5,15 @@ VPATH=../include
 
 .DUMMY: run, all, clean
 
-all: shortest_path walks
+all: graph shortest_path walks
 
 run: all
+	./graph
 	./shortest_path
 	./walks
+
+graph: graph.cpp edge.h graph.h
+	$(CPP) $(CPPOPTS) -I ../include -o $@ $<
 
 shortest_path: shortest_path.cpp edge.h graph.h shortest_paths.h heaps.h graph_utils.h
 	$(CPP) $(CPPOPTS) -I ../include -o $@ $<

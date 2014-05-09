@@ -74,17 +74,17 @@ namespace graph {
 
 
     /**
-       COMPUTE DUAL TO A GRAPH
+       COMPUTE REVERSE OF A GRAPH
     **/
 
     /**
-       dual - the dual of the graph
+       reverse - the reverse of the graph
 
        This is stimple g with the directions of the edges reversed
     **/
     
     template<class G>
-    G dual(const G& g) 
+    G reverse(const G& g)
     {
         using edge_type = typename G::edge_type;
         G result{};

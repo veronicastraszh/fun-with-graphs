@@ -5,6 +5,7 @@
 #define GRAPH_MAIN_H 1
 
 #include<vector>
+#include<list>
 #include<algorithm>
 
 using namespace std;
@@ -12,7 +13,7 @@ using namespace std;
 
 namespace graph {
 
-    template<class G> class graph_iterator;
+    template<class G> class const_graph_iterator;
   
     /**
        A Graph.
@@ -35,6 +36,7 @@ namespace graph {
         using edge_type = E;
         using size_type = typename vector<edge_type>::size_type;
         using node_type = typename E::node_type;
+        using list_type = list<edge_type>;
         
         graph() {};
         graph(initializer_list<edge_type> es)
@@ -45,20 +47,17 @@ namespace graph {
         node_type node_count() const { return static_cast<node_type>(edges.size()); }
         size_type edge_count() const { return edges_n; }
         
-        vector<edge_type>& operator[](node_type node) { return edges[node]; }
-        const vector<edge_type>& operator[](node_type node) const { return edges[node]; }
+        const list_type& operator[](node_type node) { return edges[node]; }
+        const list_type& operator[](node_type node) const { return edges[node]; }
         
-        graph_iterator<graph<E> > begin() const { return graph_iterator<graph<E> >{*this, 0}; }
-        graph_iterator<graph<E> > end() const
-        {
-            return graph_iterator<graph<E> >{*this, static_cast<node_type>(edges.size()), 0};
-        }
+        const_graph_iterator<graph<E> > begin() const { return const_graph_iterator<graph<E> >{*this, 0}; }
+        const_graph_iterator<graph<E> > end() const { return const_graph_iterator<graph<E> >{*this}; }
         
         graph& operator+=(edge_type edge);
         
     private:
         size_type edges_n {0};
-        vector<vector<edge_type>> edges;
+        vector<list_type> edges;
     };
     
     template<class E>
@@ -98,36 +97,49 @@ namespace graph {
     /**
        GRAPH ITERATOR
     **/
-    
+
     template<class G>
-    class graph_iterator {
+    class const_graph_iterator {
     public:
         using edge_type = typename G::edge_type;
         using node_type = typename edge_type::node_type;
-        
-        graph_iterator(const G& g, node_type n) : graph{g}, node{n}, offset{0} { correct_node(); };
-        graph_iterator(const G& g, node_type n, node_type o) : graph{g}, node{n}, offset{o} {};
-  
-        const edge_type& operator*() { return graph[node][offset]; }
-        const edge_type& operator*() const { return graph[node][offset]; }
-        graph_iterator operator++(int) { auto old = *this; ++offset; correct_node(); return old; }
-        graph_iterator& operator++() { ++offset; correct_node(); return *this; }
-        
-        bool operator==(const graph_iterator<G>& o) { return node == o.node && offset == o.offset; }
-        bool operator!=(const graph_iterator<G>& o) { return !(*this).operator==(o); }
-        
+        using list_type = typename G::list_type;
+        using iter_type = typename list_type::const_iterator;
+
+        const_graph_iterator(const G& g_) : g{g_}, n{g_.node_count()} { enter_node(); }
+        const_graph_iterator(const G& g_, node_type start) : g{g_}, n{start} { enter_node(); }
+
+        const edge_type& operator*() const { return *c; }
+        const_graph_iterator operator++(int) { auto old = *this; ++c; correct_node(); return old; }
+        const_graph_iterator& operator++() { ++c; correct_node(); return *this; }
+
+        bool operator==(const const_graph_iterator<G>& o) { return c == o.c; }
+        bool operator!=(const const_graph_iterator<G>& o) { return !(*this).operator==(o); }
+
     private:
-        const G& graph;
-        node_type node;
-        node_type offset;
-        
-        void correct_node() {
-            while(node < graph.node_count() && offset == graph[node].size()) {
-                offset = 0;
-                node++;
-            }
-        }
+        const G& g;
+        node_type n;
+        iter_type c;
+
+        void enter_node();
+        void correct_node();
     };
+
+    template<class G>
+    void const_graph_iterator<G>::enter_node()
+    {
+        while (n < g.node_count() && g[n].size() == 0) ++n;
+        c = g[n].begin();
+    }
+
+    template<class G>
+    void const_graph_iterator<G>::correct_node()
+    {
+        if (c == g[n].end()) {
+            ++n;
+            enter_node();
+        }
+    }
     
 }
       

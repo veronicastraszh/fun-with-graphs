@@ -80,13 +80,13 @@ namespace graph {
         node_type node_count() const { return static_cast<node_type>(edges.size()); }
         size_type edge_count() const { return static_cast<size_type>(locations.size()); }
         
-        const list_type& operator[](node_type node) { return edges[node]; }
         const list_type& operator[](node_type node) const { return edges[node]; }
         
         const_graph_iterator<graph<E> > begin() const { return const_graph_iterator<graph<E> >{*this, 0}; }
         const_graph_iterator<graph<E> > end() const { return const_graph_iterator<graph<E> >{*this}; }
         
         graph& operator+=(edge_type edge);
+        
         bool contains_edge(location_type l) const { return locations.count(l) > 0; }
         void delete_edge(location_type l);
         edge_type& edge_at(location_type l) { return *(locations[l]); }

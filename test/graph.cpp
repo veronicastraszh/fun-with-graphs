@@ -102,6 +102,7 @@ void test_edges_at(graph_type g,
 
 int main()
 {
+    cout << "Testing graph access and iteration\n";
     graph_type empty_graph;
     test_graph_iterator(empty_graph, {});
     test_graph_iterator(gr, {2,8,5,3,6,0,1,7,6,4,2});

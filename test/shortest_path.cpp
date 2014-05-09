@@ -143,6 +143,4 @@ int main()
     verify_graph("Queued label correcting, negative", negative_graph, f_q_lc_n);
     verify_graph("Deque label correcting, negative", negative_graph, f_dq_lc_n);
     fail_on_cycle("Queued label correcting, cycle", negative_graph_cycle, f_q_lc_n);
-
-    // TODO test with negative paths and negative cycles
 }

@@ -64,13 +64,13 @@ namespace graph {
                                           edge_position_hash<node_type>,
                                           edge_position_equals<node_type> >;
         
-        graph() {};
-        graph(initializer_list<edge_type> es)
+        graph() : edges(1) {};
+        graph(initializer_list<edge_type> es) : edges(1)
         {
             for (auto e : es) operator+=(e);
         }
-        graph(const graph& g) { for (auto e : g) operator+=(e); }
-        graph(graph&& g) noexcept { swap(edges, g.edges); swap(locations, g.locations); }
+        graph(const graph& g) : edges(1) { for (auto e : g) operator+=(e); }
+        graph(graph&& g) noexcept : edges(1) { swap(edges, g.edges); swap(locations, g.locations); }
 
         graph& operator=(const graph& g);
         graph& operator=(graph&& g) noexcept { swap(edges, g.edges); swap(locations, g.locations); return *this; }
@@ -185,8 +185,7 @@ namespace graph {
         while (n < g.node_count() && g[n].size() == 0) ++n;
         if (n != g.node_count()) c = g[n].begin();
         else if (n > 0) c = g[n-1].end();
-        // for empty graph we leave c uninitialize and hope for the
-        // best; TODO fix this
+        else throw length_error{"empty graph"};
     }
 
     template<class G>

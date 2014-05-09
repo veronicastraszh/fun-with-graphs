@@ -6,7 +6,10 @@
 
 #include<vector>
 #include<list>
+#include<utility>
+#include<unordered_map>
 #include<algorithm>
+#include<limits>
 
 using namespace std;
 
@@ -14,6 +17,25 @@ using namespace std;
 namespace graph {
 
     template<class G> class const_graph_iterator;
+
+    template<class N>
+    class edge_position_hash {
+    public:
+        const size_t shift_size = min(numeric_limits<N>::digits,numeric_limits<size_t>::digits) / 2;
+        size_t operator()(pair<N,N> p) const {
+            size_t result = p.first;
+            result <<= shift_size;
+            return result + p.second;
+        }
+    };
+
+    template<class N>
+    class edge_position_equals {
+    public:
+        bool operator()(pair<N,N> left, pair<N,N> right) const {
+            return left.first == right.first && left.second == right.second;
+        }
+    };
   
     /**
        A Graph.
@@ -37,6 +59,11 @@ namespace graph {
         using size_type = typename vector<edge_type>::size_type;
         using node_type = typename E::node_type;
         using list_type = list<edge_type>;
+        using location_type = pair<node_type,node_type>;
+        using lookup_type = unordered_map<location_type,
+                                          typename list_type::iterator,
+                                          edge_position_hash<node_type>,
+                                          edge_position_equals<node_type> >;
         
         graph() {};
         graph(initializer_list<edge_type> es)
@@ -58,6 +85,7 @@ namespace graph {
     private:
         size_type edges_n {0};
         vector<list_type> edges;
+        lookup_type locations{25,edge_position_hash<node_type>{},edge_position_equals<node_type>{}};
     };
     
     template<class E>
@@ -67,7 +95,7 @@ namespace graph {
         if (max_vertex >= edges.size()) {
             edges.resize(max_vertex+1);
         }
-        edges[e.source()].push_back(e);
+        edges[e.source()].push_front(e);
         edges_n += 1;
         return *this;
     }
@@ -129,7 +157,10 @@ namespace graph {
     void const_graph_iterator<G>::enter_node()
     {
         while (n < g.node_count() && g[n].size() == 0) ++n;
-        c = g[n].begin();
+        if (n != g.node_count()) c = g[n].begin();
+        else if (n > 0) c = g[n-1].end();
+        // for empty graph we leave c uninitialize and hope for the
+        // best; TODO fix this
     }
 
     template<class G>

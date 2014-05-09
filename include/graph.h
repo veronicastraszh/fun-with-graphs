@@ -89,6 +89,8 @@ namespace graph {
         graph& operator+=(edge_type edge);
         bool contains_edge(location_type l) const { return locations.count(l) > 0; }
         void delete_edge(location_type l);
+        edge_type& edge_at(location_type l) { return *(locations[l]); }
+        edge_type edge_at(location_type l) const { return *(locations[l]); }
         
     private:
         vector<list_type> edges;

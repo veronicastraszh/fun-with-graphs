@@ -107,7 +107,7 @@ namespace graph {
     }
 
     template<class E>
-    graph<E>& graph<E>::operator+=(E e)
+    graph<E>& graph<E>::operator+=(edge_type e)
     {
         node_type max_vertex = max(e.source(), e.target());
         if (max_vertex >= edges.size()) {

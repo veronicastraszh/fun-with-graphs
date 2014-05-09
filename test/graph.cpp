@@ -102,6 +102,8 @@ void test_edges_at(graph_type g,
 
 int main()
 {
+    graph_type empty_graph;
+    test_graph_iterator(empty_graph, {});
     test_graph_iterator(gr, {2,8,5,3,6,0,1,7,6,4,2});
     test_edge_iteration(gr, 0, {2, 8});
     test_edge_iteration(gr, 3, {1, 7, 6});

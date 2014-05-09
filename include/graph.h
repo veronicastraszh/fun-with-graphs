@@ -10,6 +10,7 @@
 #include<unordered_map>
 #include<algorithm>
 #include<limits>
+#include<functional>
 
 using namespace std;
 
@@ -21,11 +22,9 @@ namespace graph {
     template<class N>
     class edge_position_hash {
     public:
-        const size_t shift_size = min(numeric_limits<N>::digits,numeric_limits<size_t>::digits) / 2;
         size_t operator()(pair<N,N> p) const {
-            size_t result = p.first;
-            result <<= shift_size;
-            return result + p.second;
+            hash<N> h;
+            return h(p.first) ^ h(p.second);
         }
     };
 
@@ -70,6 +69,13 @@ namespace graph {
         {
             for (auto e : es) operator+=(e);
         }
+        graph(const graph& g) { for (auto e : g) operator+=(e); }
+        graph(graph&& g) noexcept { swap(edges, g.edges); swap(locations, g.locations); }
+
+        graph& operator=(const graph& g);
+        graph& operator=(graph&& g) noexcept { swap(edges, g.edges); swap(locations, g.locations); return *this; }
+
+        ~graph() = default;
     
         node_type node_count() const { return static_cast<node_type>(edges.size()); }
         size_type edge_count() const { return static_cast<size_type>(locations.size()); }
@@ -89,6 +95,15 @@ namespace graph {
         lookup_type locations{25,edge_position_hash<node_type>{},edge_position_equals<node_type>{}};
     };
     
+    template<class E>
+    graph<E>& graph<E>::operator=(const graph<E>& g)
+    {
+        edges.clear();
+        locations.clear();
+        for (auto e: g) operator+=(e);
+        return *this;
+    }
+
     template<class E>
     graph<E>& graph<E>::operator+=(E e)
     {
@@ -124,7 +139,7 @@ namespace graph {
     G reverse(const G& g)
     {
         using edge_type = typename G::edge_type;
-        G result{};
+        G result;
         for (edge_type e : g) {
             result += reverse_edge(e);
         }

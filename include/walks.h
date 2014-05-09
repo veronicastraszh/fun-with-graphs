@@ -164,11 +164,11 @@ namespace graph {
        single strongly connected component of g.
        
        g is a graph
-       d is the dual of the graph, computed using dual(g)
+       d is the reverse of the graph, computed using reverse(g)
     **/
     
     template<class G>
-    vector<vector<typename G::node_type>> scc(const G& g, const G& d)
+    vector<vector<typename G::node_type>> scc(const G& g, const G& r)
     {
         using node_type = typename G::node_type;
         
@@ -180,14 +180,14 @@ namespace graph {
             if (!walk1.processed(n)) walk1(g,n);
         }
         
-        // collect components in dual graph
+        // collect components in reverse graph
         vector<vector<node_type>> result;
         vector<node_type> current;
-        dfw<G> walk2{d};
+        dfw<G> walk2{r};
         walk2.pre = [&](int node) { current.push_back(node); };
         for (auto n = finish_times.rbegin(); n != finish_times.rend(); n++) {
             if (!walk2.processed(*n)) {
-                walk2(d, *n);
+                walk2(r, *n);
                 result.push_back(move(current));
                 current = vector<node_type>{};
             }

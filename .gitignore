@@ -2,5 +2,7 @@
 *.dSYM
 *.a
 *.o
-walks
-shortest_path
+test/walks
+test/shortest_path
+test/graph
+

@@ -1,4 +1,3 @@
-#include <string>
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -75,7 +74,7 @@ void test_scc()
                        {7,5}};
     using component = vector<basic_graph_type::node_type>;
     using result_type = vector<component>;
-    result_type result = scc(g, dual(g));
+    result_type result = scc(g, reverse(g));
     result_type expected{{ 0, 1, 2, 3 },
                          { 7 },
                          { 4, 5, 6 }};

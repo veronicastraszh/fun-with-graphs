@@ -72,7 +72,7 @@ namespace graph {
         }
     
         node_type node_count() const { return static_cast<node_type>(edges.size()); }
-        size_type edge_count() const { return edges_n; }
+        size_type edge_count() const { return static_cast<size_type>(locations.size()); }
         
         const list_type& operator[](node_type node) { return edges[node]; }
         const list_type& operator[](node_type node) const { return edges[node]; }
@@ -81,9 +81,10 @@ namespace graph {
         const_graph_iterator<graph<E> > end() const { return const_graph_iterator<graph<E> >{*this}; }
         
         graph& operator+=(edge_type edge);
+        bool contains_edge(location_type l) const { return locations.count(l) > 0; }
+        void delete_edge(location_type l);
         
     private:
-        size_type edges_n {0};
         vector<list_type> edges;
         lookup_type locations{25,edge_position_hash<node_type>{},edge_position_equals<node_type>{}};
     };
@@ -96,10 +97,18 @@ namespace graph {
             edges.resize(max_vertex+1);
         }
         edges[e.source()].push_front(e);
-        edges_n += 1;
+        locations.insert(make_pair(make_pair(e.source(),e.target()), edges[e.source()].begin()));
         return *this;
     }
 
+
+    template<class E>
+    void graph<E>::delete_edge(location_type l)
+    {
+        typename list_type::iterator pos = locations[l];
+        locations.erase(l);
+        edges[pos->source()].erase(pos);
+    }
 
     /**
        COMPUTE REVERSE OF A GRAPH
